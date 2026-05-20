@@ -33,12 +33,36 @@ function computeIndexes(items) {
   }));
 }
 
-function enrichProductSignals(items) {
+function parseUpdateDate(value) {
+  if (!value) return null;
+  const match = String(value)
+    .trim()
+    .match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})/);
+  if (!match) return null;
+  return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+}
+
+function getFreshnessLabel(updatedAt, now = new Date()) {
+  const parsedDate = parseUpdateDate(updatedAt);
+  if (!parsedDate) return "未知";
+
+  const millisecondsPerDay = 24 * 60 * 60 * 1000;
+  const diffDays = (now.getTime() - parsedDate.getTime()) / millisecondsPerDay;
+  return diffDays <= 90 ? "新品" : "老品";
+}
+
+function enrichProductSignals(items, now = new Date()) {
   const imageCounts = items.reduce((counts, item) => {
     const image = item.image || "";
     counts.set(image, (counts.get(image) || 0) + 1);
     return counts;
   }, new Map());
+  const rankMap = [...items]
+    .sort((a, b) => Number(b.gmv || 0) - Number(a.gmv || 0))
+    .reduce((map, item, index) => {
+      map.set(item.id, index + 1);
+      return map;
+    }, new Map());
 
   return items.map((item) => {
     const duplicateImageCount = imageCounts.get(item.image || "") || 0;
@@ -47,6 +71,8 @@ function enrichProductSignals(items) {
       ...item,
       duplicateImageCount,
       isDuplicateImage: duplicateImageCount > 1,
+      freshness: getFreshnessLabel(item.updatedAt, now),
+      rank: rankMap.get(item.id) || 0,
     };
   });
 }
@@ -55,6 +81,7 @@ function applyFilters(items, filters = {}) {
   const level2 = filters.level2 || "all";
   const level3 = filters.level3 || "all";
   const status = filters.status || "all";
+  const freshness = filters.freshness || "all";
   const priceBand = filters.priceBand || "all";
   const sortBy = filters.sortBy || "gmvIndex";
 
@@ -62,6 +89,7 @@ function applyFilters(items, filters = {}) {
     if (level2 !== "all" && item.level2 !== level2) return false;
     if (level3 !== "all" && item.level3 !== level3) return false;
     if (status !== "all" && item.status !== status) return false;
+    if (freshness !== "all" && item.freshness !== freshness) return false;
     if (priceBand !== "all" && getPriceBand(item.priceMid) !== priceBand) return false;
     return true;
   });
@@ -177,6 +205,7 @@ const state = {
   level3: "all",
   priceBand: "all",
   status: "all",
+  freshness: "all",
   sortBy: "gmvIndex",
   view: "card",
 };
@@ -187,6 +216,7 @@ const els = {
   level3Filter: document.querySelector("#level3Filter"),
   priceFilter: document.querySelector("#priceFilter"),
   statusFilter: document.querySelector("#statusFilter"),
+  freshnessFilter: document.querySelector("#freshnessFilter"),
   sortFilter: document.querySelector("#sortFilter"),
   resetFilters: document.querySelector("#resetFilters"),
   level2Table: document.querySelector("#level2Table"),
@@ -345,6 +375,11 @@ function bindEvents() {
     render();
   });
 
+  els.freshnessFilter.addEventListener("change", () => {
+    state.freshness = els.freshnessFilter.value;
+    render();
+  });
+
   els.sortFilter.addEventListener("change", () => {
     state.sortBy = els.sortFilter.value;
     render();
@@ -356,6 +391,7 @@ function bindEvents() {
       level3: "all",
       priceBand: "all",
       status: "all",
+      freshness: "all",
       sortBy: "gmvIndex",
     });
     render();
@@ -515,6 +551,7 @@ function renderProducts(filtered) {
 
 function renderProductCard(item) {
   const statusClass = item.status === "通过" ? "approved" : "rejected";
+  const freshnessClass = item.freshness === "新品" ? "fresh" : item.freshness === "老品" ? "aged" : "";
   const duplicateTag = item.isDuplicateImage
     ? `<span class="signal-pill duplicate">图片重复款 · ${item.duplicateImageCount}</span>`
     : `<span class="signal-pill">图片不重复</span>`;
@@ -542,6 +579,8 @@ function renderProductCard(item) {
           </div>
         </div>
         <div class="signal-row">
+          <span class="signal-pill rank">rank: ${item.rank}</span>
+          <span class="signal-pill ${freshnessClass}">${item.freshness}</span>
           ${duplicateTag}
         </div>
       </div>
@@ -577,6 +616,7 @@ function syncControls() {
   fillSelect(els.level3Filter, options.level3Options, state.level3, "全部三级类目");
   els.priceFilter.value = state.priceBand;
   els.statusFilter.value = state.status;
+  els.freshnessFilter.value = state.freshness;
   els.sortFilter.value = state.sortBy;
 }
 

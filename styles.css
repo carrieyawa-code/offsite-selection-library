@@ -224,7 +224,7 @@ h3 {
   top: 0;
   z-index: 5;
   display: grid;
-  grid-template-columns: repeat(5, minmax(140px, 1fr)) auto;
+  grid-template-columns: repeat(6, minmax(120px, 1fr)) auto;
   gap: 12px;
   align-items: end;
   margin-bottom: 18px;
@@ -550,6 +550,21 @@ td small {
 .signal-pill.duplicate {
   background: #fff7ed;
   color: var(--warm);
+}
+
+.signal-pill.rank {
+  background: #eaf2ff;
+  color: #1d4ed8;
+}
+
+.signal-pill.fresh {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+
+.signal-pill.aged {
+  background: #f2eee7;
+  color: var(--muted);
 }
 
 .wall-mode .product-grid {
