@@ -209,6 +209,7 @@ function base64ToBytes(value) {
 }
 
 async function decryptProducts(password) {
+  await loadEncryptedProducts();
   const encrypted = window.ENCRYPTED_PRODUCTS;
   if (!encrypted) {
     throw new Error("missing_encrypted_data");
@@ -244,6 +245,18 @@ async function decryptProducts(password) {
     combined,
   );
   return JSON.parse(new TextDecoder().decode(plainBuffer));
+}
+
+function loadEncryptedProducts() {
+  if (window.ENCRYPTED_PRODUCTS) return Promise.resolve();
+
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = `./data/products-data.enc.js?t=${Date.now()}`;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("encrypted_data_load_failed"));
+    document.head.appendChild(script);
+  });
 }
 
 function getStoredAccessCode() {
