@@ -137,6 +137,12 @@ function formatCategoryDrilldownName(level2, level3) {
   return `${second} > ${third}`;
 }
 
+function formatLeadingCategories(rows, threshold = 10) {
+  const leading = rows.filter((row) => row.gmvIndex > threshold);
+  const visible = leading.length ? leading : rows.slice(0, 1);
+  return visible.map((row) => `${row.name} ${row.gmvIndex.toFixed(2)}`).join(" / ");
+}
+
 function summarizePriceBands(items) {
   const total = items.length || 1;
   const withIndexes = computeIndexes(items);
@@ -358,17 +364,17 @@ function getFilteredProducts() {
 function renderSummary(filtered) {
   const allLevel2 = new Set(products.map((item) => item.level2)).size;
   const allLevel3 = new Set(products.map((item) => item.level3)).size;
-  const topLevel2 = summarizeByCategory(products, "level2")[0];
-  const topLevel3 = summarizeByCategory(products, "level3")[0];
+  const topLevel2Rows = summarizeByCategory(products, "level2");
+  const topLevel3Rows = summarizeByCategory(products, "level3");
   const topBand = summarizePriceBands(products).sort((a, b) => b.gmvIndex - a.gmvIndex)[0];
 
   const summary = [
-    { label: "商品总数", value: formatNumber(products.length), hint: "来自当前工作簿" },
+    { label: "商品总数", value: formatNumber(products.length), hint: "" },
     { label: "当前结果", value: formatNumber(filtered.length), hint: "随筛选变化" },
     { label: "二级类目", value: allLevel2, hint: "可下钻筛选" },
     { label: "三级类目", value: allLevel3, hint: "商品分组依据" },
-    { label: "主力二级类目", value: topLevel2?.name || "-", hint: `GMV指数 ${formatIndex(topLevel2?.gmvIndex)}` },
-    { label: "主力三级类目", value: topLevel3?.name || "-", hint: `GMV指数 ${formatIndex(topLevel3?.gmvIndex)}` },
+    { label: "主力二级类目", value: formatLeadingCategories(topLevel2Rows), hint: "GMV指数 > 10" },
+    { label: "主力三级类目", value: formatLeadingCategories(topLevel3Rows), hint: "GMV指数 > 10" },
     { label: "主力价格带", value: topBand?.name || "-", hint: `GMV指数 ${formatIndex(topBand?.gmvIndex)}` },
   ];
 
@@ -378,7 +384,7 @@ function renderSummary(filtered) {
         <article class="summary-tile">
           <span>${item.label}</span>
           <strong>${item.value}</strong>
-          <small>${item.hint}</small>
+          ${item.hint ? `<small>${item.hint}</small>` : ""}
         </article>
       `,
     )
