@@ -165,6 +165,7 @@ function summarizeSimple(items, key) {
 
 let products = [];
 let hasBoundDashboardEvents = false;
+const AUTO_UNLOCK_CODE = "xuanpin2026";
 const state = {
   level2: "all",
   level3: "all",
@@ -175,10 +176,6 @@ const state = {
 };
 
 const els = {
-  lockScreen: document.querySelector("#lockScreen"),
-  passwordInput: document.querySelector("#passwordInput"),
-  unlockButton: document.querySelector("#unlockButton"),
-  unlockError: document.querySelector("#unlockError"),
   summaryGrid: document.querySelector("#summaryGrid"),
   level2Filter: document.querySelector("#level2Filter"),
   level3Filter: document.querySelector("#level3Filter"),
@@ -243,16 +240,9 @@ async function decryptProducts(password) {
   return JSON.parse(new TextDecoder().decode(plainBuffer));
 }
 
-async function unlockDashboard() {
-  const password = els.passwordInput.value.trim();
-  els.unlockError.textContent = "";
-  els.unlockButton.disabled = true;
-  els.unlockButton.textContent = "解锁中";
-
+async function unlockDashboard(password = AUTO_UNLOCK_CODE) {
   try {
     products = enrichProductSignals(await decryptProducts(password));
-    document.body.classList.remove("locked");
-    els.lockScreen.setAttribute("hidden", "");
     initFilters();
     if (!hasBoundDashboardEvents) {
       bindEvents();
@@ -260,10 +250,7 @@ async function unlockDashboard() {
     }
     render();
   } catch {
-    els.unlockError.textContent = "访问码不正确，请重新输入。";
-  } finally {
-    els.unlockButton.disabled = false;
-    els.unlockButton.textContent = "解锁";
+    document.body.innerHTML = '<main class="app-shell"><div class="empty-state">数据加载失败，请检查发布文件是否完整。</div></main>';
   }
 }
 
@@ -347,16 +334,6 @@ function bindEvents() {
       renderProducts(applyFilters(products, state));
     });
   }
-}
-
-function bindUnlockEvents() {
-  els.unlockButton.addEventListener("click", unlockDashboard);
-  els.passwordInput.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") {
-      unlockDashboard();
-    }
-  });
-  els.passwordInput.focus();
 }
 
 function getFilteredProducts() {
@@ -579,4 +556,4 @@ function render() {
   renderProducts(filtered);
 }
 
-bindUnlockEvents();
+unlockDashboard();
