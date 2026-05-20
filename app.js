@@ -165,7 +165,7 @@ function summarizeSimple(items, key) {
 
 let products = [];
 let hasBoundDashboardEvents = false;
-const AUTO_UNLOCK_CODE = "xuanpin2026";
+const ACCESS_STORAGE_KEY = "offsiteSelectionAccessCode";
 const state = {
   level2: "all",
   level3: "all",
@@ -240,7 +240,21 @@ async function decryptProducts(password) {
   return JSON.parse(new TextDecoder().decode(plainBuffer));
 }
 
-async function unlockDashboard(password = AUTO_UNLOCK_CODE) {
+function getStoredAccessCode() {
+  return sessionStorage.getItem(ACCESS_STORAGE_KEY);
+}
+
+function redirectToUnlock() {
+  window.location.href = "./index.html";
+}
+
+async function unlockDashboard() {
+  const password = getStoredAccessCode();
+  if (!password) {
+    redirectToUnlock();
+    return;
+  }
+
   try {
     products = enrichProductSignals(await decryptProducts(password));
     initFilters();
@@ -250,7 +264,8 @@ async function unlockDashboard(password = AUTO_UNLOCK_CODE) {
     }
     render();
   } catch {
-    document.body.innerHTML = '<main class="app-shell"><div class="empty-state">数据加载失败，请检查发布文件是否完整。</div></main>';
+    sessionStorage.removeItem(ACCESS_STORAGE_KEY);
+    redirectToUnlock();
   }
 }
 

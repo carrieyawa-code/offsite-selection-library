@@ -7,105 +7,21 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <main class="app-shell">
-      <header class="topbar">
-        <div>
-          <p class="eyebrow">Offsite Selection Material Library</p>
-          <h1>站外选品素材库</h1>
-        </div>
-        <div class="view-switch" aria-label="商品视图切换">
-          <button class="active" type="button" data-view="card">卡片</button>
-          <button type="button" data-view="wall">图片墙</button>
-        </div>
-      </header>
-
-      <section class="summary-grid" id="summaryGrid" aria-label="汇总数据"></section>
-
-      <section class="filter-strip" aria-label="筛选条件">
-        <label>
-          二级类目
-          <select id="level2Filter"></select>
+    <section class="lock-screen" aria-label="访问保护">
+      <div class="lock-panel">
+        <p class="eyebrow">Private Access</p>
+        <h1>站外选品素材库</h1>
+        <p>请输入访问码进入商品素材看板。</p>
+        <label class="password-field">
+          访问码
+          <input id="passwordInput" type="password" autocomplete="current-password" placeholder="输入访问码" />
         </label>
-        <label>
-          三级类目
-          <select id="level3Filter"></select>
-        </label>
-        <label>
-          价格带
-          <select id="priceFilter"></select>
-        </label>
-        <label>
-          审核标签
-          <select id="statusFilter">
-            <option value="all">全部</option>
-            <option value="通过">通过</option>
-            <option value="驳回">驳回</option>
-          </select>
-        </label>
-        <label>
-          排序
-          <select id="sortFilter">
-            <option value="gmvIndex">GMV指数</option>
-            <option value="orderIndex">订单指数</option>
-            <option value="priceAsc">价格指数升序</option>
-            <option value="priceDesc">价格指数降序</option>
-          </select>
-        </label>
-        <button type="button" id="resetFilters">重置</button>
-      </section>
+        <button id="unlockButton" type="button">进入看板</button>
+        <small id="unlockError" role="alert"></small>
+      </div>
+    </section>
 
-      <section class="analysis-layout">
-        <div class="analysis-panel">
-          <div class="panel-heading">
-            <h2>二级类目表现</h2>
-            <span>按 GMV指数 排序</span>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>类目</th>
-                  <th>商品数</th>
-                  <th>GMV指数</th>
-                  <th>订单指数</th>
-                  <th>中位价格指数</th>
-                </tr>
-              </thead>
-              <tbody id="level2Table"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="analysis-panel">
-          <div class="panel-heading">
-            <h2>三级类目下钻</h2>
-            <span id="level3Context">全部二级类目</span>
-          </div>
-          <div id="level3Bars" class="bar-list"></div>
-        </div>
-
-        <div class="analysis-panel">
-          <div class="panel-heading">
-            <h2>价格带结构</h2>
-            <span>当前筛选范围</span>
-          </div>
-          <div id="priceBandBars" class="bar-list compact"></div>
-        </div>
-      </section>
-
-      <section class="product-section">
-        <div class="section-heading">
-          <div>
-            <h2>商品展示</h2>
-            <p id="resultNote">按三级类目分组，默认按 GMV指数 排序。</p>
-          </div>
-          <span id="resultCount"></span>
-        </div>
-        <div id="productGroups" class="product-groups"></div>
-      </section>
-    </main>
-
-    <script src="./data/products-data.enc.js"></script>
-    <script src="./app.js"></script>
+    <script src="./unlock.js"></script>
   </body>
 </html>
+
