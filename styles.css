@@ -97,8 +97,43 @@ button {
   cursor: pointer;
 }
 
+.site-layout {
+  display: grid;
+  grid-template-columns: 176px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.side-nav {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  display: grid;
+  gap: 8px;
+  min-height: 100vh;
+  padding: 28px 18px;
+  border-right: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(14px);
+}
+
+.side-nav a {
+  display: flex;
+  align-items: center;
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 6px;
+  color: var(--muted);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.side-nav a.active {
+  background: var(--accent);
+  color: #fff;
+}
+
 .app-shell {
-  width: min(1480px, calc(100% - 40px));
+  width: min(1480px, calc(100% - 32px));
   margin: 0 auto;
   padding: 28px 0 48px;
 }
@@ -653,6 +688,24 @@ td small {
 }
 
 @media (max-width: 760px) {
+  .site-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .side-nav {
+    position: static;
+    display: flex;
+    min-height: auto;
+    padding: 12px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .side-nav a {
+    flex: 1;
+    justify-content: center;
+  }
+
   .app-shell {
     width: min(100% - 24px, 1480px);
     padding-top: 18px;

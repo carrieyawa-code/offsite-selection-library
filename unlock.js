@@ -15,7 +15,7 @@ function enterDashboard() {
   }
 
   sessionStorage.setItem(ACCESS_STORAGE_KEY, code);
-  window.location.href = "./dashboard.html";
+  window.location.href = "./women.html";
 }
 
 unlockButton.addEventListener("click", enterDashboard);

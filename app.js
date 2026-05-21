@@ -207,6 +207,8 @@ function summarizeSimple(items, key) {
 let products = [];
 let hasBoundDashboardEvents = false;
 const ACCESS_STORAGE_KEY = "offsiteSelectionAccessCode";
+const dashboardConfig = window.DASHBOARD_CONFIG || {};
+const dataFile = dashboardConfig.dataFile || "products-women-data.enc.js";
 const state = {
   level2: "all",
   level3: "all",
@@ -295,7 +297,7 @@ function loadEncryptedProducts() {
 
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = `./data/products-data.enc.js?t=${Date.now()}`;
+    script.src = `./data/${dataFile}?t=${Date.now()}`;
     script.onload = () => resolve();
     script.onerror = () => reject(new Error("encrypted_data_load_failed"));
     document.head.appendChild(script);
