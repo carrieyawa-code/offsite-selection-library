@@ -79,6 +79,14 @@
             <option value="priceDesc">价格指数降序</option>
           </select>
         </label>
+        <label>
+          展示方式
+          <select id="displayModeFilter">
+            <option value="flatGmv">GMV指数降序</option>
+            <option value="level2">按二级类目分组</option>
+            <option value="level3">按三级类目分组</option>
+          </select>
+        </label>
         <button type="button" id="resetFilters">重置</button>
       </section>
 
@@ -125,7 +133,7 @@
         <div class="section-heading">
           <div>
             <h2>商品展示</h2>
-            <p id="resultNote">按三级类目分组，默认按 GMV指数 排序。</p>
+            <p id="resultNote">不分组，按 GMV指数 降序展示。</p>
           </div>
           <span id="resultCount"></span>
         </div>

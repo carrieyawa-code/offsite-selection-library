@@ -178,6 +178,36 @@ function formatLeadingCategories(rows, threshold = 10) {
   return visible.map((row) => `${row.name} ${row.gmvIndex.toFixed(2)}`).join(" / ");
 }
 
+function getProductDisplayGroups(items, displayMode = "flatGmv") {
+  const sortedProducts = [...items].sort((a, b) => b.gmvIndex - a.gmvIndex);
+
+  if (displayMode === "flatGmv") {
+    return [
+      {
+        name: "",
+        items: sortedProducts,
+        gmvIndex: sortedProducts.reduce((sum, item) => sum + item.gmvIndex, 0),
+      },
+    ];
+  }
+
+  const groupKey = displayMode === "level2" ? "level2" : "level3";
+  const groups = new Map();
+  for (const item of sortedProducts) {
+    const groupName = item[groupKey] || "未分类";
+    if (!groups.has(groupName)) groups.set(groupName, []);
+    groups.get(groupName).push(item);
+  }
+
+  return [...groups.entries()]
+    .map(([name, groupItems]) => ({
+      name,
+      items: groupItems,
+      gmvIndex: groupItems.reduce((sum, item) => sum + item.gmvIndex, 0),
+    }))
+    .sort((a, b) => b.gmvIndex - a.gmvIndex);
+}
+
 function summarizePriceBands(items) {
   const total = items.length || 1;
   const withIndexes = computeIndexes(items);
@@ -220,6 +250,7 @@ const state = {
   rankMin: "",
   rankMax: "",
   sortBy: "gmvIndex",
+  displayMode: "flatGmv",
   view: "card",
 };
 
@@ -254,6 +285,7 @@ const els = {
   rankMinFilter: document.querySelector("#rankMinFilter"),
   rankMaxFilter: document.querySelector("#rankMaxFilter"),
   sortFilter: document.querySelector("#sortFilter"),
+  displayModeFilter: document.querySelector("#displayModeFilter"),
   resetFilters: document.querySelector("#resetFilters"),
   level2Table: document.querySelector("#level2Table"),
   level3Bars: document.querySelector("#level3Bars"),
@@ -422,6 +454,11 @@ function bindEvents() {
     render();
   });
 
+  els.displayModeFilter.addEventListener("change", () => {
+    state.displayMode = els.displayModeFilter.value;
+    renderProducts(applyFilters(products, state));
+  });
+
   els.resetFilters.addEventListener("click", () => {
     Object.assign(state, {
       level2: "all",
@@ -433,6 +470,7 @@ function bindEvents() {
       rankMin: "",
       rankMax: "",
       sortBy: "gmvIndex",
+      displayMode: "flatGmv",
     });
     render();
   });
@@ -553,13 +591,15 @@ function renderBarRow(name, gmvIndex, orderIndex, count, kind, rawValue = name) 
 }
 
 function renderProducts(filtered) {
-  const groups = groupBy(filtered, "level3");
-  const totalGroups = [...groups.entries()].sort((a, b) => sumIndex(b[1]) - sumIndex(a[1]));
+  const displayGroups = getProductDisplayGroups(filtered, state.displayMode);
   els.resultCount.textContent = `${formatNumber(filtered.length)} 个商品`;
+  const displayNotes = {
+    flatGmv: "不分组，按 GMV指数 降序展示。",
+    level2: "按二级类目分组，组内默认按 GMV指数 降序。",
+    level3: "按三级类目分组，组内默认按 GMV指数 降序。",
+  };
   els.resultNote.textContent =
-    state.view === "card"
-      ? "按三级类目分组，默认按 GMV指数 排序。"
-      : "图片墙模式保留核心指数，方便快速扫款。";
+    state.view === "wall" ? "图片墙模式保留核心指数，方便快速扫款。" : displayNotes[state.displayMode];
   els.productGroups.className = `product-groups ${state.view === "wall" ? "wall-mode" : ""}`;
 
   if (!filtered.length) {
@@ -567,18 +607,30 @@ function renderProducts(filtered) {
     return;
   }
 
-  els.productGroups.innerHTML = totalGroups
-    .map(([name, items]) => {
-      const sorted = [...items].sort((a, b) => b.gmvIndex - a.gmvIndex);
-      const groupGmvIndex = sorted.reduce((sum, item) => sum + item.gmvIndex, 0);
+  if (state.displayMode === "flatGmv") {
+    els.productGroups.innerHTML = `
+      <div class="product-grid flat-product-grid">
+        ${displayGroups[0].items.map(renderProductCard).join("")}
+      </div>
+    `;
+    return;
+  }
+
+  els.productGroups.innerHTML = displayGroups
+    .map((group) => {
+      const sorted = group.items;
+      const subtitle =
+        state.displayMode === "level2"
+          ? `${formatNumber(sorted.length)} 个商品`
+          : sorted[0]?.level2 || "";
       return `
         <section class="category-group">
           <div class="group-heading">
             <div>
-              <h3>${name}</h3>
-              <p>${sorted[0]?.level2 || ""}</p>
+              <h3>${group.name}</h3>
+              <p>${subtitle}</p>
             </div>
-            <span>GMV指数 ${formatIndex(groupGmvIndex)}</span>
+            <span>GMV指数 ${formatIndex(group.gmvIndex)}</span>
           </div>
           <div class="product-grid">
             ${sorted.map(renderProductCard).join("")}
@@ -661,6 +713,7 @@ function syncControls() {
   els.rankMinFilter.value = state.rankMin;
   els.rankMaxFilter.value = state.rankMax;
   els.sortFilter.value = state.sortBy;
+  els.displayModeFilter.value = state.displayMode;
 }
 
 function render() {
