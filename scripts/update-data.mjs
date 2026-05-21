@@ -113,6 +113,7 @@ function normalizeRows(rows) {
       gmv: toNumber(source.GMV),
       status: source["审核状态"],
       updatedAt: source["更新日期"] || "",
+      source: source["来源"] || "未知",
     };
   });
 }

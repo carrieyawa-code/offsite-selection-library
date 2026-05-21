@@ -81,6 +81,7 @@ function applyFilters(items, filters = {}) {
   const level2 = filters.level2 || "all";
   const level3 = filters.level3 || "all";
   const status = filters.status || "all";
+  const source = filters.source || "all";
   const freshness = filters.freshness || "all";
   const priceBand = filters.priceBand || "all";
   const duplicate = filters.duplicate || "all";
@@ -92,6 +93,7 @@ function applyFilters(items, filters = {}) {
     if (level2 !== "all" && item.level2 !== level2) return false;
     if (level3 !== "all" && item.level3 !== level3) return false;
     if (status !== "all" && item.status !== status) return false;
+    if (source !== "all" && (item.source || "未知") !== source) return false;
     if (freshness !== "all" && item.freshness !== freshness) return false;
     if (priceBand !== "all" && getPriceBand(item.priceMid) !== priceBand) return false;
     if (duplicate === "duplicate" && !item.isDuplicateImage) return false;
@@ -245,6 +247,7 @@ const state = {
   level3: "all",
   priceBand: "all",
   status: "all",
+  source: "all",
   freshness: "all",
   duplicate: "all",
   rankMin: "",
@@ -280,6 +283,7 @@ const els = {
   level3Filter: document.querySelector("#level3Filter"),
   priceFilter: document.querySelector("#priceFilter"),
   statusFilter: document.querySelector("#statusFilter"),
+  sourceFilter: document.querySelector("#sourceFilter"),
   freshnessFilter: document.querySelector("#freshnessFilter"),
   duplicateFilter: document.querySelector("#duplicateFilter"),
   rankMinFilter: document.querySelector("#rankMinFilter"),
@@ -402,6 +406,12 @@ function initFilters() {
   fillSelect(els.level2Filter, options.level2Options, state.level2, "全部二级类目");
   fillSelect(els.level3Filter, options.level3Options, state.level3, "全部三级类目");
   fillSelect(
+    els.sourceFilter,
+    [...new Set(products.map((item) => item.source || "未知"))].sort(),
+    state.source,
+    "全部来源",
+  );
+  fillSelect(
     els.priceFilter,
     PRICE_BANDS.map((band) => band.label),
     state.priceBand,
@@ -428,6 +438,11 @@ function bindEvents() {
 
   els.statusFilter.addEventListener("change", () => {
     state.status = els.statusFilter.value;
+    render();
+  });
+
+  els.sourceFilter.addEventListener("change", () => {
+    state.source = els.sourceFilter.value;
     render();
   });
 
@@ -465,6 +480,7 @@ function bindEvents() {
       level3: "all",
       priceBand: "all",
       status: "all",
+      source: "all",
       freshness: "all",
       duplicate: "all",
       rankMin: "",
@@ -647,6 +663,7 @@ function renderProductCard(item) {
   const duplicateTag = item.isDuplicateImage
     ? `<span class="signal-pill duplicate">图片重复款 · ${item.duplicateImageCount}</span>`
     : `<span class="signal-pill">图片不重复</span>`;
+  const sourceTag = `<span class="signal-pill source">来源：${escapeHtml(item.source || "未知")}</span>`;
 
   return `
     <article class="product-card">
@@ -672,6 +689,7 @@ function renderProductCard(item) {
           </div>
         </div>
         <div class="signal-row">
+          ${sourceTag}
           <span class="signal-pill ${freshnessClass}">${item.freshness}</span>
           ${duplicateTag}
         </div>
@@ -708,6 +726,7 @@ function syncControls() {
   fillSelect(els.level3Filter, options.level3Options, state.level3, "全部三级类目");
   els.priceFilter.value = state.priceBand;
   els.statusFilter.value = state.status;
+  els.sourceFilter.value = state.source;
   els.freshnessFilter.value = state.freshness;
   els.duplicateFilter.value = state.duplicate;
   els.rankMinFilter.value = state.rankMin;

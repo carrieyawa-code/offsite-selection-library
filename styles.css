@@ -683,6 +683,11 @@ td small {
   color: var(--warm);
 }
 
+.signal-pill.source {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
 .signal-pill.fresh {
   background: var(--ok-soft);
   color: var(--ok);
