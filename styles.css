@@ -503,6 +503,15 @@ td small {
   margin-bottom: 16px;
 }
 
+.product-heading-left {
+  display: grid;
+  gap: 8px;
+}
+
+.product-display-control {
+  width: min(240px, 100%);
+}
+
 .section-heading span {
   color: var(--accent-strong);
   font-weight: 800;
