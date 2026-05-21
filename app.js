@@ -663,7 +663,7 @@ function renderProductCard(item) {
   const duplicateTag = item.isDuplicateImage
     ? `<span class="signal-pill duplicate">图片重复款 · ${item.duplicateImageCount}</span>`
     : `<span class="signal-pill">图片不重复</span>`;
-  const sourceTag = `<span class="signal-pill source">来源：${escapeHtml(item.source || "未知")}</span>`;
+  const sourceTag = `<span class="signal-pill source">来源：${escapeAttr(item.source || "未知")}</span>`;
 
   return `
     <article class="product-card">
