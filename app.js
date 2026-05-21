@@ -224,15 +224,16 @@ const state = {
 };
 
 function enforceCanonicalHost() {
-  if (!["http:", "https:"].includes(window.location.protocol)) return;
-  if (["localhost", "127.0.0.1"].includes(window.location.hostname)) return;
-  if (CANONICAL_HOSTS.has(window.location.hostname)) return;
+  if (!["http:", "https:"].includes(window.location.protocol)) return true;
+  if (["localhost", "127.0.0.1"].includes(window.location.hostname)) return true;
+  if (CANONICAL_HOSTS.has(window.location.hostname)) return true;
 
   const path = window.location.pathname.replace(/^\/offsite-selection-library/, "") || "/women.html";
   window.location.replace(`https://offsiteselection.uk${path}${window.location.search}${window.location.hash}`);
+  return false;
 }
 
-enforceCanonicalHost();
+const shouldBootDashboard = enforceCanonicalHost();
 
 const els = {
   summaryGrid: document.querySelector("#summaryGrid"),
@@ -664,4 +665,6 @@ function render() {
   renderProducts(filtered);
 }
 
-unlockDashboard();
+if (shouldBootDashboard) {
+  unlockDashboard();
+}
