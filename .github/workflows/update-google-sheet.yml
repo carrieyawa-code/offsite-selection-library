@@ -1,15 +1,7 @@
 name: Update Google Sheet data
 
 on:
-  schedule:
-    - cron: "0 2 * * *"
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - "scripts/update-data.mjs"
-      - ".github/workflows/update-google-sheet.yml"
 
 permissions:
   contents: write
