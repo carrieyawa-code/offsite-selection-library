@@ -83,6 +83,8 @@ function applyFilters(items, filters = {}) {
   const status = filters.status || "all";
   const freshness = filters.freshness || "all";
   const priceBand = filters.priceBand || "all";
+  const rankMin = Number(filters.rankMin || 0);
+  const rankMax = Number(filters.rankMax || 0);
   const sortBy = filters.sortBy || "gmvIndex";
 
   const filtered = items.filter((item) => {
@@ -91,6 +93,8 @@ function applyFilters(items, filters = {}) {
     if (status !== "all" && item.status !== status) return false;
     if (freshness !== "all" && item.freshness !== freshness) return false;
     if (priceBand !== "all" && getPriceBand(item.priceMid) !== priceBand) return false;
+    if (rankMin > 0 && Number(item.rank || 0) < rankMin) return false;
+    if (rankMax > 0 && Number(item.rank || 0) > rankMax) return false;
     return true;
   });
 
@@ -206,6 +210,8 @@ const state = {
   priceBand: "all",
   status: "all",
   freshness: "all",
+  rankMin: "",
+  rankMax: "",
   sortBy: "gmvIndex",
   view: "card",
 };
@@ -217,6 +223,8 @@ const els = {
   priceFilter: document.querySelector("#priceFilter"),
   statusFilter: document.querySelector("#statusFilter"),
   freshnessFilter: document.querySelector("#freshnessFilter"),
+  rankMinFilter: document.querySelector("#rankMinFilter"),
+  rankMaxFilter: document.querySelector("#rankMaxFilter"),
   sortFilter: document.querySelector("#sortFilter"),
   resetFilters: document.querySelector("#resetFilters"),
   level2Table: document.querySelector("#level2Table"),
@@ -380,6 +388,14 @@ function bindEvents() {
     render();
   });
 
+  [els.rankMinFilter, els.rankMaxFilter].forEach((input) => {
+    input.addEventListener("input", () => {
+      state.rankMin = els.rankMinFilter.value;
+      state.rankMax = els.rankMaxFilter.value;
+      render();
+    });
+  });
+
   els.sortFilter.addEventListener("change", () => {
     state.sortBy = els.sortFilter.value;
     render();
@@ -392,6 +408,8 @@ function bindEvents() {
       priceBand: "all",
       status: "all",
       freshness: "all",
+      rankMin: "",
+      rankMax: "",
       sortBy: "gmvIndex",
     });
     render();
@@ -617,6 +635,8 @@ function syncControls() {
   els.priceFilter.value = state.priceBand;
   els.statusFilter.value = state.status;
   els.freshnessFilter.value = state.freshness;
+  els.rankMinFilter.value = state.rankMin;
+  els.rankMaxFilter.value = state.rankMax;
   els.sortFilter.value = state.sortBy;
 }
 
