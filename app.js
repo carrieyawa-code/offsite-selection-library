@@ -83,6 +83,7 @@ function applyFilters(items, filters = {}) {
   const status = filters.status || "all";
   const freshness = filters.freshness || "all";
   const priceBand = filters.priceBand || "all";
+  const duplicate = filters.duplicate || "all";
   const rankMin = Number(filters.rankMin || 0);
   const rankMax = Number(filters.rankMax || 0);
   const sortBy = filters.sortBy || "gmvIndex";
@@ -93,6 +94,8 @@ function applyFilters(items, filters = {}) {
     if (status !== "all" && item.status !== status) return false;
     if (freshness !== "all" && item.freshness !== freshness) return false;
     if (priceBand !== "all" && getPriceBand(item.priceMid) !== priceBand) return false;
+    if (duplicate === "duplicate" && !item.isDuplicateImage) return false;
+    if (duplicate === "unique" && item.isDuplicateImage) return false;
     if (rankMin > 0 && Number(item.rank || 0) < rankMin) return false;
     if (rankMax > 0 && Number(item.rank || 0) > rankMax) return false;
     return true;
@@ -210,6 +213,7 @@ const state = {
   priceBand: "all",
   status: "all",
   freshness: "all",
+  duplicate: "all",
   rankMin: "",
   rankMax: "",
   sortBy: "gmvIndex",
@@ -223,6 +227,7 @@ const els = {
   priceFilter: document.querySelector("#priceFilter"),
   statusFilter: document.querySelector("#statusFilter"),
   freshnessFilter: document.querySelector("#freshnessFilter"),
+  duplicateFilter: document.querySelector("#duplicateFilter"),
   rankMinFilter: document.querySelector("#rankMinFilter"),
   rankMaxFilter: document.querySelector("#rankMaxFilter"),
   sortFilter: document.querySelector("#sortFilter"),
@@ -388,6 +393,11 @@ function bindEvents() {
     render();
   });
 
+  els.duplicateFilter.addEventListener("change", () => {
+    state.duplicate = els.duplicateFilter.value;
+    render();
+  });
+
   [els.rankMinFilter, els.rankMaxFilter].forEach((input) => {
     input.addEventListener("input", () => {
       state.rankMin = els.rankMinFilter.value;
@@ -408,6 +418,7 @@ function bindEvents() {
       priceBand: "all",
       status: "all",
       freshness: "all",
+      duplicate: "all",
       rankMin: "",
       rankMax: "",
       sortBy: "gmvIndex",
@@ -635,6 +646,7 @@ function syncControls() {
   els.priceFilter.value = state.priceBand;
   els.statusFilter.value = state.status;
   els.freshnessFilter.value = state.freshness;
+  els.duplicateFilter.value = state.duplicate;
   els.rankMinFilter.value = state.rankMin;
   els.rankMaxFilter.value = state.rankMax;
   els.sortFilter.value = state.sortBy;
