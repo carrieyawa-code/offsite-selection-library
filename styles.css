@@ -562,6 +562,21 @@ td small {
   display: block;
 }
 
+.image-rank-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  min-width: 58px;
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: rgba(23, 32, 51, 0.82);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+  text-align: center;
+  box-shadow: 0 8px 18px rgba(23, 32, 51, 0.18);
+}
+
 .status {
   position: absolute;
   top: 10px;
@@ -657,11 +672,6 @@ td small {
 .signal-pill.duplicate {
   background: #fff7ed;
   color: var(--warm);
-}
-
-.signal-pill.rank {
-  background: #eaf2ff;
-  color: #1d4ed8;
 }
 
 .signal-pill.fresh {

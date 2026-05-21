@@ -652,6 +652,7 @@ function renderProductCard(item) {
     <article class="product-card">
       <div class="image-wrap">
         <img src="${escapeAttr(item.image)}" alt="${escapeAttr(item.level3)} 商品主图" loading="lazy" />
+        <span class="image-rank-badge">rank: ${item.rank}</span>
         <span class="status ${statusClass}">${item.status}</span>
       </div>
       <div class="product-body">
@@ -671,7 +672,6 @@ function renderProductCard(item) {
           </div>
         </div>
         <div class="signal-row">
-          <span class="signal-pill rank">rank: ${item.rank}</span>
           <span class="signal-pill ${freshnessClass}">${item.freshness}</span>
           ${duplicateTag}
         </div>
