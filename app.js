@@ -228,8 +228,16 @@ function enforceCanonicalHost() {
   if (["localhost", "127.0.0.1"].includes(window.location.hostname)) return true;
   if (CANONICAL_HOSTS.has(window.location.hostname)) return true;
 
-  const path = window.location.pathname.replace(/^\/offsite-selection-library/, "") || "/women.html";
-  window.location.replace(`https://offsiteselection.uk${path}${window.location.search}${window.location.hash}`);
+  document.body.innerHTML = `
+    <main class="redirect-screen" aria-label="请使用正式域名访问">
+      <section class="redirect-panel">
+        <p class="eyebrow">Cloudflare Access</p>
+        <h1>请使用正式域名访问</h1>
+        <p>为了启用邮箱验证，请从 offsiteselection.uk 进入看板。</p>
+        <a href="https://offsiteselection.uk/">打开正式入口</a>
+      </section>
+    </main>
+  `;
   return false;
 }
 

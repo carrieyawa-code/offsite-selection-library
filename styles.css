@@ -92,6 +92,24 @@ body.theme-men {
   text-decoration: none;
 }
 
+.portal-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.redirect-panel .portal-actions a {
+  width: auto;
+}
+
+.redirect-panel .theme-women-link {
+  background: #e86aa5;
+}
+
+.redirect-panel .theme-men-link {
+  background: #4f8cff;
+}
+
 .password-field {
   margin-bottom: 14px;
 }
