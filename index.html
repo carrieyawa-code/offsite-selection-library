@@ -4,23 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>站外选品素材库</title>
-    <link rel="stylesheet" href="./styles.css?v=20260520-summary2" />
+    <link rel="stylesheet" href="./styles.css?v=20260521-accessless" />
   </head>
   <body>
-    <section class="lock-screen" aria-label="访问保护">
-      <div class="lock-panel">
-        <p class="eyebrow">Private Access</p>
+    <main class="redirect-screen" aria-label="正在进入看板">
+      <section class="redirect-panel">
+        <p class="eyebrow">Cloudflare Access</p>
         <h1>站外选品素材库</h1>
-        <p>请输入访问码进入商品素材看板。</p>
-        <label class="password-field">
-          访问码
-          <input id="passwordInput" type="password" autocomplete="current-password" placeholder="输入访问码" />
-        </label>
-        <button id="unlockButton" type="button">进入看板</button>
-        <small id="unlockError" role="alert"></small>
-      </div>
-    </section>
+        <p>邮箱验证通过后，将自动进入选品看板。</p>
+        <a href="./women.html">进入看板</a>
+      </section>
+    </main>
 
-    <script src="./unlock.js?v=20260520-summary2"></script>
+    <script>
+      window.location.replace("./women.html");
+    </script>
   </body>
 </html>

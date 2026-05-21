@@ -206,7 +206,8 @@ function summarizeSimple(items, key) {
 
 let products = [];
 let hasBoundDashboardEvents = false;
-const ACCESS_STORAGE_KEY = "offsiteSelectionAccessCode";
+const DATA_DECRYPTION_KEY = "xuanpin2026";
+const CANONICAL_HOSTS = new Set(["offsiteselection.uk", "www.offsiteselection.uk"]);
 const dashboardConfig = window.DASHBOARD_CONFIG || {};
 const dataFile = dashboardConfig.dataFile || "products-women-data.enc.js";
 const state = {
@@ -221,6 +222,17 @@ const state = {
   sortBy: "gmvIndex",
   view: "card",
 };
+
+function enforceCanonicalHost() {
+  if (!["http:", "https:"].includes(window.location.protocol)) return;
+  if (["localhost", "127.0.0.1"].includes(window.location.hostname)) return;
+  if (CANONICAL_HOSTS.has(window.location.hostname)) return;
+
+  const path = window.location.pathname.replace(/^\/offsite-selection-library/, "") || "/women.html";
+  window.location.replace(`https://offsiteselection.uk${path}${window.location.search}${window.location.hash}`);
+}
+
+enforceCanonicalHost();
 
 const els = {
   summaryGrid: document.querySelector("#summaryGrid"),
@@ -304,32 +316,20 @@ function loadEncryptedProducts() {
   });
 }
 
-function getStoredAccessCode() {
-  return sessionStorage.getItem(ACCESS_STORAGE_KEY);
-}
-
-function redirectToUnlock() {
-  window.location.href = "./index.html";
-}
-
 async function unlockDashboard() {
-  const password = getStoredAccessCode();
-  if (!password) {
-    redirectToUnlock();
-    return;
-  }
-
   try {
-    products = enrichProductSignals(await decryptProducts(password));
+    products = enrichProductSignals(await decryptProducts(DATA_DECRYPTION_KEY));
     initFilters();
     if (!hasBoundDashboardEvents) {
       bindEvents();
       hasBoundDashboardEvents = true;
     }
     render();
-  } catch {
-    sessionStorage.removeItem(ACCESS_STORAGE_KEY);
-    redirectToUnlock();
+  } catch (error) {
+    console.error(error);
+    if (els.productGroups) {
+      els.productGroups.innerHTML = '<div class="empty-state">数据加载失败，请稍后刷新重试。</div>';
+    }
   }
 }
 
