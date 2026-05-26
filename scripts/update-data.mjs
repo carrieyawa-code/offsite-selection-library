@@ -73,11 +73,21 @@ function parsePrice(value) {
 }
 
 function splitCategory(value) {
-  const parts = String(value || "").split(">").map((part) => part.trim());
-  const level1 = parts[0] || "Clothing";
-  const level2 = parts[1] || "Uncategorized";
-  const level3 = parts[2] || level2;
-  return [level1, level2, level3];
+  const parts = String(value || "")
+    .split(/\s*(?:>|\/|／)\s*/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  if (parts.length >= 3) {
+    return [parts[0], parts[1], parts[2]];
+  }
+
+  if (parts.length === 2) {
+    return [parts[0], parts[1], parts[1]];
+  }
+
+  const level1 = parts[0] || "Uncategorized";
+  return [level1, "Uncategorized", "Uncategorized"];
 }
 
 function toNumber(value) {
