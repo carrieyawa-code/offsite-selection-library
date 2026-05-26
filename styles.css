@@ -386,8 +386,7 @@ input {
 }
 
 .table-wrap {
-  max-height: 390px;
-  overflow: auto;
+  overflow-x: auto;
 }
 
 table {
