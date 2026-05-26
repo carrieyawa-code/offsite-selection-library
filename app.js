@@ -298,6 +298,7 @@ const els = {
   productGroups: document.querySelector("#productGroups"),
   resultCount: document.querySelector("#resultCount"),
   resultNote: document.querySelector("#resultNote"),
+  dataUpdatedAt: document.querySelector("#dataUpdatedAt"),
   viewButtons: document.querySelectorAll("[data-view]"),
 };
 
@@ -364,6 +365,7 @@ function loadEncryptedProducts() {
 async function unlockDashboard() {
   try {
     products = enrichProductSignals(await decryptProducts(DATA_DECRYPTION_KEY));
+    renderDataUpdatedAt();
     initFilters();
     if (!hasBoundDashboardEvents) {
       bindEvents();
@@ -390,6 +392,41 @@ function formatPrice(value) {
   if (typeof value !== "number" || Number.isNaN(value)) return "未知";
   if (value > 999) return "异常";
   return value.toFixed(2);
+}
+
+function formatGeneratedDate(value) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("zh-CN", {
+    timeZone: "Asia/Shanghai",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function renderDataUpdatedAt() {
+  if (!els.dataUpdatedAt) return;
+  els.dataUpdatedAt.textContent = `更新日期：${formatGeneratedDate(window.ENCRYPTED_PRODUCTS?.generatedAt)}`;
+}
+
+async function writeClipboardText(value) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(value);
+    return;
+  }
+  const textarea = document.createElement("textarea");
+  textarea.value = value;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.append(textarea);
+  textarea.select();
+  document.execCommand("copy");
+  textarea.remove();
 }
 
 function fillSelect(select, options, selected, allLabel) {
@@ -498,6 +535,16 @@ function bindEvents() {
       renderProducts(applyFilters(products, state));
     });
   }
+
+  els.productGroups.addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-jid]");
+    if (!button) return;
+    await writeClipboardText(button.dataset.jid || "");
+    button.textContent = "Copied";
+    window.setTimeout(() => {
+      button.textContent = "Copy JID";
+    }, 1200);
+  });
 }
 
 function getFilteredProducts() {
@@ -664,6 +711,9 @@ function renderProductCard(item) {
     ? `<span class="signal-pill duplicate">图片重复款 · ${item.duplicateImageCount}</span>`
     : `<span class="signal-pill">图片不重复</span>`;
   const sourceTag = `<span class="signal-pill source">来源：${escapeAttr(item.source || "未知")}</span>`;
+  const jidButton = item.jid
+    ? `<button class="copy-jid-button" type="button" data-jid="${escapeAttr(item.jid)}">Copy JID</button>`
+    : "";
 
   return `
     <article class="product-card">
@@ -692,6 +742,7 @@ function renderProductCard(item) {
           ${sourceTag}
           <span class="signal-pill ${freshnessClass}">${item.freshness}</span>
           ${duplicateTag}
+          ${jidButton}
         </div>
       </div>
     </article>

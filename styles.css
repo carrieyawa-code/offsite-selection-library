@@ -698,6 +698,24 @@ td small {
   color: var(--muted);
 }
 
+.copy-jid-button {
+  min-height: 26px;
+  padding: 5px 10px;
+  border: 1px solid var(--accent-strong);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--accent-strong);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.15;
+  cursor: pointer;
+}
+
+.copy-jid-button:hover {
+  background: var(--accent-soft);
+}
+
 .wall-mode .product-grid {
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
 }
@@ -746,6 +764,20 @@ td small {
   justify-content: space-between;
   border-radius: 6px;
   font-size: 11px;
+}
+
+.wall-mode .copy-jid-button {
+  width: 100%;
+  border-radius: 6px;
+  font-size: 11px;
+}
+
+.data-footer {
+  margin-top: 18px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: right;
 }
 
 .empty-state {

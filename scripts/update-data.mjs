@@ -124,6 +124,7 @@ function normalizeRows(rows) {
       status: source["审核状态"],
       updatedAt: source["更新日期"] || "",
       source: source["来源"] || "未知",
+      jid: source["J-ID"] || "",
     };
   });
 }
