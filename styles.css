@@ -312,8 +312,8 @@ h3 {
 
 .filter-strip {
   position: sticky;
-  top: 0;
-  z-index: 5;
+  top: 72px;
+  z-index: 15;
   display: grid;
   grid-template-columns: repeat(8, minmax(104px, 1fr)) auto;
   gap: 12px;
@@ -772,11 +772,11 @@ td small {
 }
 
 .data-footer {
-  margin-top: 18px;
+  display: block;
+  margin-top: 8px;
   color: var(--muted);
   font-size: 13px;
   font-weight: 700;
-  text-align: right;
 }
 
 .empty-state {
@@ -826,7 +826,9 @@ td small {
   }
 
   .filter-strip {
-    position: static;
+    top: 67px;
+    max-height: calc(100vh - 82px);
+    overflow-y: auto;
     grid-template-columns: 1fr;
   }
 
