@@ -7,14 +7,24 @@ const ACCESS_CODE = "xuanpin2026";
 const SHEETS = [
   {
     key: "women",
-    gid: "0",
+    sheetName: "women",
     outputPath: path.join("data", "products-women-data.enc.js"),
     legacyOutputPath: path.join("data", "products-data.enc.js"),
   },
   {
     key: "men",
-    gid: "1194547272",
+    sheetName: "men",
     outputPath: path.join("data", "products-men-data.enc.js"),
+  },
+  {
+    key: "underwear",
+    sheetName: "underwear",
+    outputPath: path.join("data", "products-underwear-data.enc.js"),
+  },
+  {
+    key: "sports",
+    sheetName: "Sports",
+    outputPath: path.join("data", "products-sports-data.enc.js"),
   },
 ];
 
@@ -172,7 +182,7 @@ async function writeEncryptedFile(outputPath, encrypted) {
 }
 
 async function updateSheet(sheet) {
-  const sourceUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${sheet.gid}`;
+  const sourceUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet.sheetName)}`;
   const response = await fetch(sourceUrl);
   if (!response.ok) {
     throw new Error(`Google Sheet 读取失败：${response.status} ${response.statusText}`);
