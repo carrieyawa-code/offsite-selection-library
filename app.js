@@ -390,30 +390,13 @@ async function decryptProducts(password) {
 function loadEncryptedProducts() {
   if (window.ENCRYPTED_PRODUCTS) return Promise.resolve();
 
-  const candidates = [
-    dataFile,
-    section === "women" ? "products-women-data.enc.js" : "",
-    section === "men" ? "products-men-data.enc.js" : "",
-    section === "underwear" ? "products-underwear-data.enc.js" : "",
-    section === "sports" ? "products-sports-data.enc.js" : "",
-    section === "women" ? "products-data.enc.js" : "",
-  ].filter(Boolean);
-
-  const tryLoad = (index) =>
-    new Promise((resolve, reject) => {
-      const script = document.createElement("script");
-      script.src = `./data/${candidates[index]}?t=${Date.now()}`;
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error(candidates[index]));
-      document.head.appendChild(script);
-    }).catch((error) => {
-      if (index + 1 >= candidates.length) {
-        throw new Error("encrypted_data_load_failed");
-      }
-      return tryLoad(index + 1);
-    });
-
-  return tryLoad(0);
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = `./data/${dataFile}?t=${Date.now()}`;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("encrypted_data_load_failed"));
+    document.head.appendChild(script);
+  });
 }
 
 async function unlockDashboard() {
