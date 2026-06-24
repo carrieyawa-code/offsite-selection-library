@@ -21,6 +21,42 @@ function getPriceBand(price) {
   return band ? band.label : "未知";
 }
 
+const SECTION_ALIASES = {
+  women: ["women", "woman", "women's clothing", "womens clothing", "women clothing"],
+  men: ["men", "men's clothing", "mens clothing", "men clothing"],
+  underwear: ["underwear", "lingerie & underwear", "lingerie and underwear", "lingerie"],
+  sports: ["sports", "sports & outdoor", "sports and outdoor", "sportswear"],
+};
+
+function normalizeCategoryName(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[’']/g, "'")
+    .replace(/\s+/g, " ")
+    .replace(/\s*&\s*/g, " & ");
+}
+
+function resolveSectionFromLevel1(level1) {
+  const normalized = normalizeCategoryName(level1);
+  for (const [section, aliases] of Object.entries(SECTION_ALIASES)) {
+    if (aliases.some((alias) => normalized.includes(alias))) {
+      return section;
+    }
+  }
+  return "unknown";
+}
+
+function filterProductsBySection(items, section) {
+  const targetSection = String(section || "").trim().toLowerCase();
+  return items.filter((item) => {
+    const itemSection =
+      (item.section && String(item.section).trim().toLowerCase()) ||
+      resolveSectionFromLevel1(item.level1 || item.categoryPath || "");
+    return itemSection === targetSection;
+  });
+}
+
 function computeIndexes(items) {
   const totalGmv = items.reduce((sum, item) => sum + Number(item.gmv || 0), 0);
   const totalOrders = items.reduce((sum, item) => sum + Number(item.orders || 0), 0);
@@ -168,7 +204,7 @@ function getTopLevel3(items) {
 function formatCategoryDrilldownName(level2, level3) {
   const second = level2 || "未分类";
   const third = level3 || "";
-  if (!third || third === "未分类" || third === second) {
+  if (!third || third === "未分类" || third === "未分组" || third === "Uncategorized" || third === second) {
     return second;
   }
   return `${second} > ${third}`;
@@ -241,7 +277,8 @@ let hasBoundDashboardEvents = false;
 const DATA_DECRYPTION_KEY = "xuanpin2026";
 const CANONICAL_HOSTS = new Set(["offsiteselection.uk", "www.offsiteselection.uk"]);
 const dashboardConfig = window.DASHBOARD_CONFIG || {};
-const dataFile = dashboardConfig.dataFile || "products-women-data.enc.js";
+const dataFile = dashboardConfig.dataFile || "products-all-data.enc.js";
+const section = dashboardConfig.section || "women";
 const state = {
   level2: "all",
   level3: "all",
@@ -353,18 +390,36 @@ async function decryptProducts(password) {
 function loadEncryptedProducts() {
   if (window.ENCRYPTED_PRODUCTS) return Promise.resolve();
 
-  return new Promise((resolve, reject) => {
-    const script = document.createElement("script");
-    script.src = `./data/${dataFile}?t=${Date.now()}`;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error("encrypted_data_load_failed"));
-    document.head.appendChild(script);
-  });
+  const candidates = [
+    dataFile,
+    section === "women" ? "products-women-data.enc.js" : "",
+    section === "men" ? "products-men-data.enc.js" : "",
+    section === "underwear" ? "products-underwear-data.enc.js" : "",
+    section === "sports" ? "products-sports-data.enc.js" : "",
+    section === "women" ? "products-data.enc.js" : "",
+  ].filter(Boolean);
+
+  const tryLoad = (index) =>
+    new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = `./data/${candidates[index]}?t=${Date.now()}`;
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error(candidates[index]));
+      document.head.appendChild(script);
+    }).catch((error) => {
+      if (index + 1 >= candidates.length) {
+        throw new Error("encrypted_data_load_failed");
+      }
+      return tryLoad(index + 1);
+    });
+
+  return tryLoad(0);
 }
 
 async function unlockDashboard() {
   try {
-    products = enrichProductSignals(await decryptProducts(DATA_DECRYPTION_KEY));
+    const decrypted = await decryptProducts(DATA_DECRYPTION_KEY);
+    products = enrichProductSignals(filterProductsBySection(decrypted, section));
     renderDataUpdatedAt();
     initFilters();
     if (!hasBoundDashboardEvents) {
@@ -552,8 +607,8 @@ function getFilteredProducts() {
 }
 
 function renderSummary(filtered) {
-  const allLevel2 = new Set(products.map((item) => item.level2)).size;
-  const allLevel3 = new Set(products.map((item) => item.level3)).size;
+  const allLevel2 = new Set(products.map((item) => item.level2).filter(Boolean)).size;
+  const allLevel3 = new Set(products.map((item) => item.level3).filter(Boolean)).size;
   const topLevel2Rows = summarizeByCategory(products, "level2");
   const topLevel3Rows = summarizeByCategory(products, "level3");
   const topBand = summarizePriceBands(products).sort((a, b) => b.gmvIndex - a.gmvIndex)[0];
@@ -666,7 +721,9 @@ function renderProducts(filtered) {
   els.productGroups.className = `product-groups ${state.view === "wall" ? "wall-mode" : ""}`;
 
   if (!filtered.length) {
-    els.productGroups.innerHTML = `<div class="empty-state">当前筛选没有匹配商品，请调整筛选条件。</div>`;
+    els.productGroups.innerHTML = products.length
+      ? `<div class="empty-state">当前筛选没有匹配商品，请调整筛选条件。</div>`
+      : `<div class="empty-state">当前类目暂无数据，请检查总数据源中的类目字段。</div>`;
     return;
   }
 
@@ -723,7 +780,7 @@ function renderProductCard(item) {
         <span class="status ${statusClass}">${item.status}</span>
       </div>
       <div class="product-body">
-        <p class="category-path">${item.level2} / ${item.level3}</p>
+        <p class="category-path">${formatCategoryDrilldownName(item.level2, item.level3)}</p>
         <div class="metric-line price-line">
           <span>价格指数</span>
           <strong>${formatPrice(item.priceMid)}</strong>

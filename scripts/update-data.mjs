@@ -1,32 +1,12 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { resolveSectionFromLevel1 } from "../app-logic.mjs";
 
 const SHEET_ID = "1sNXgaBwFEe-oDhJYtCvF64Hzot8fy4qtind-Q3qqwL8";
+const SHEET_NAME = "2025-6-8";
 const ACCESS_CODE = "xuanpin2026";
-const SHEETS = [
-  {
-    key: "women",
-    sheetName: "women",
-    outputPath: path.join("data", "products-women-data.enc.js"),
-    legacyOutputPath: path.join("data", "products-data.enc.js"),
-  },
-  {
-    key: "men",
-    sheetName: "men",
-    outputPath: path.join("data", "products-men-data.enc.js"),
-  },
-  {
-    key: "underwear",
-    sheetName: "underwear",
-    outputPath: path.join("data", "products-underwear-data.enc.js"),
-  },
-  {
-    key: "sports",
-    sheetName: "Sports",
-    outputPath: path.join("data", "products-sports-data.enc.js"),
-  },
-];
+const OUTPUT_PATH = path.join("data", "products-all-data.enc.js");
 
 const REQUIRED_HEADERS = ["商品主图", "类目", "参考价格", "成交订单", "GMV", "审核状态"];
 
@@ -84,7 +64,7 @@ function parsePrice(value) {
 
 function splitCategory(value) {
   const parts = String(value || "")
-    .split(/\s*(?:>|\/|／)\s*/)
+    .split(/\s*(?:>|\/)\s*/)
     .map((part) => part.trim())
     .filter(Boolean);
 
@@ -109,7 +89,7 @@ function normalizeRows(rows) {
   const headers = rows[0].map((header) => header.trim());
   for (const header of REQUIRED_HEADERS) {
     if (!headers.includes(header)) {
-      throw new Error(`Google Sheet 缺少必需字段：${header}`);
+      throw new Error(`Google Sheet 缺少必要字段：${header}`);
     }
   }
 
@@ -117,6 +97,7 @@ function normalizeRows(rows) {
     const source = Object.fromEntries(headers.map((header, colIndex) => [header, row[colIndex] ?? ""]));
     const [priceMin, priceMax, priceMid] = parsePrice(source["参考价格"]);
     const [level1, level2, level3] = splitCategory(source["类目"]);
+    const section = resolveSectionFromLevel1(level1);
 
     return {
       id: index + 1,
@@ -125,6 +106,7 @@ function normalizeRows(rows) {
       level1,
       level2,
       level3,
+      section,
       priceLabel: source["参考价格"],
       priceMin,
       priceMax,
@@ -132,7 +114,7 @@ function normalizeRows(rows) {
       orders: toNumber(source["成交订单"]),
       gmv: toNumber(source.GMV),
       status: source["审核状态"],
-      updatedAt: source["更新日期"] || "",
+      updatedAt: source["更新时间"] || "",
       source: source["来源"] || "未知",
       jid: source["J-ID"] || "",
     };
@@ -149,7 +131,7 @@ async function readExistingSourceHash(outputPath) {
   }
 }
 
-function encryptPayload(records, sourceHash, sourceUrl, sheetKey) {
+function encryptPayload(records, sourceHash, sourceUrl) {
   const salt = crypto.randomBytes(16);
   const iv = crypto.randomBytes(12);
   const iterations = 210000;
@@ -162,7 +144,7 @@ function encryptPayload(records, sourceHash, sourceUrl, sheetKey) {
   return {
     version: 1,
     source: "google_sheets",
-    sourceSheet: sheetKey,
+    sourceSheet: SHEET_NAME,
     sourceUrl,
     sourceHash,
     generatedAt: new Date().toISOString(),
@@ -181,8 +163,8 @@ async function writeEncryptedFile(outputPath, encrypted) {
   await fs.writeFile(outputPath, `window.ENCRYPTED_PRODUCTS = ${JSON.stringify(encrypted)};\n`, "utf8");
 }
 
-async function updateSheet(sheet) {
-  const sourceUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet.sheetName)}`;
+async function main() {
+  const sourceUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
   const response = await fetch(sourceUrl);
   if (!response.ok) {
     throw new Error(`Google Sheet 读取失败：${response.status} ${response.statusText}`);
@@ -192,25 +174,16 @@ async function updateSheet(sheet) {
   const rows = parseCsv(csv);
   const records = normalizeRows(rows);
   const sourceHash = crypto.createHash("sha256").update(JSON.stringify(records)).digest("hex");
-  const existingHash = await readExistingSourceHash(sheet.outputPath);
+  const existingHash = await readExistingSourceHash(OUTPUT_PATH);
 
   if (existingHash === sourceHash) {
-    console.log(`${sheet.key} Google Sheet 数据无变化，跳过重建。rows=${records.length}`);
+    console.log(`Google Sheet 数据无变化，跳过重建。rows=${records.length}`);
     return;
   }
 
-  const encrypted = encryptPayload(records, sourceHash, sourceUrl, sheet.key);
-  await writeEncryptedFile(sheet.outputPath, encrypted);
-  if (sheet.legacyOutputPath) {
-    await writeEncryptedFile(sheet.legacyOutputPath, encrypted);
-  }
-  console.log(`${sheet.key} 已更新加密数据：rows=${records.length}, hash=${sourceHash.slice(0, 12)}`);
-}
-
-async function main() {
-  for (const sheet of SHEETS) {
-    await updateSheet(sheet);
-  }
+  const encrypted = encryptPayload(records, sourceHash, sourceUrl);
+  await writeEncryptedFile(OUTPUT_PATH, encrypted);
+  console.log(`已更新加密数据：rows=${records.length}, hash=${sourceHash.slice(0, 12)}`);
 }
 
 main().catch((error) => {
