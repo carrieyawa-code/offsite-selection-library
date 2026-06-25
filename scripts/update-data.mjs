@@ -4,7 +4,7 @@ import path from "node:path";
 import { resolveSectionFromLevel1 } from "../app-logic.mjs";
 
 const SHEET_ID = "1sNXgaBwFEe-oDhJYtCvF64Hzot8fy4qtind-Q3qqwL8";
-const SHEET_NAME = "2025-6-8";
+const SHEET_NAME = "2026-6-25";
 const ACCESS_CODE = "xuanpin2026";
 const OUTPUT_PATH = path.join("data", "products-all-data.enc.js");
 
