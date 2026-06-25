@@ -163,6 +163,29 @@ async function writeEncryptedFile(outputPath, encrypted) {
   await fs.writeFile(outputPath, `window.ENCRYPTED_PRODUCTS = ${JSON.stringify(encrypted)};\n`, "utf8");
 }
 
+function updateDashboardConfig(html, section, dataVersion) {
+  return html.replace(
+    /window\.DASHBOARD_CONFIG = \{[\s\S]*?\};/,
+    `window.DASHBOARD_CONFIG = {\n        section: "${section}",\n        dataFile: "products-all-data.enc.js",\n        dataVersion: "${dataVersion}"\n      };`,
+  );
+}
+
+async function writePageConfigs(dataVersion) {
+  const pages = [
+    ["women.html", "women"],
+    ["men.html", "men"],
+    ["underwear.html", "underwear"],
+    ["sports.html", "sports"],
+    ["dashboard.html", "women"],
+  ];
+
+  for (const [fileName, section] of pages) {
+    const filePath = path.join(".", fileName);
+    const html = await fs.readFile(filePath, "utf8");
+    await fs.writeFile(filePath, updateDashboardConfig(html, section, dataVersion), "utf8");
+  }
+}
+
 async function main() {
   const sourceUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
   const response = await fetch(sourceUrl);
@@ -183,6 +206,7 @@ async function main() {
 
   const encrypted = encryptPayload(records, sourceHash, sourceUrl);
   await writeEncryptedFile(OUTPUT_PATH, encrypted);
+  await writePageConfigs(sourceHash.slice(0, 12));
   console.log(`已更新加密数据：rows=${records.length}, hash=${sourceHash.slice(0, 12)}`);
 }
 

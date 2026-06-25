@@ -278,6 +278,7 @@ const DATA_DECRYPTION_KEY = "xuanpin2026";
 const CANONICAL_HOSTS = new Set(["offsiteselection.uk", "www.offsiteselection.uk"]);
 const dashboardConfig = window.DASHBOARD_CONFIG || {};
 const dataFile = dashboardConfig.dataFile || "products-all-data.enc.js";
+const dataVersion = dashboardConfig.dataVersion || "";
 const section = dashboardConfig.section || "women";
 const state = {
   level2: "all",
@@ -392,7 +393,9 @@ function loadEncryptedProducts() {
 
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = `./data/${dataFile}?t=${Date.now()}`;
+    script.src = dataVersion
+      ? `./data/${dataFile}?v=${encodeURIComponent(dataVersion)}`
+      : `./data/${dataFile}`;
     script.onload = () => resolve();
     script.onerror = () => reject(new Error("encrypted_data_load_failed"));
     document.head.appendChild(script);
