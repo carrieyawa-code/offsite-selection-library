@@ -13,6 +13,16 @@ function roundIndex(value) {
   return Math.round(value * 100) / 100;
 }
 
+function isFiniteNumber(value) {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function formatPriceValue(value) {
+  if (!isFiniteNumber(value)) return "未知";
+  if (value > 999) return "异常";
+  return value.toFixed(2);
+}
+
 function getPriceBand(price) {
   if (typeof price !== "number" || Number.isNaN(price)) {
     return "未知";
@@ -67,6 +77,65 @@ function computeIndexes(items) {
     gmvIndex: totalGmv ? roundIndex((Number(item.gmv || 0) / totalGmv) * 100) : 0,
     orderIndex: totalOrders ? roundIndex((Number(item.orders || 0) / totalOrders) * 100) : 0,
   }));
+}
+
+function buildImageDedupedProducts(items) {
+  const groups = new Map();
+
+  for (const item of items) {
+    const image = String(item.image || "").trim();
+    const key = image || `record:${item.id}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(item);
+  }
+
+  const mergedProducts = [...groups.values()].map((groupItems, groupIndex) => {
+    const representative = [...groupItems].sort((a, b) => Number(b.gmv || 0) - Number(a.gmv || 0))[0] || {};
+    const prices = groupItems
+      .flatMap((item) => [item.priceMin, item.priceMax, item.priceMid])
+      .filter(isFiniteNumber);
+    const priceMin = prices.length ? Math.min(...prices) : null;
+    const priceMax = prices.length ? Math.max(...prices) : null;
+    const statuses = [...new Set(groupItems.map((item) => item.status).filter(Boolean))];
+    const sources = [...new Set(groupItems.map((item) => item.source).filter(Boolean))].sort();
+    const freshnessValues = [...new Set(groupItems.map((item) => item.freshness).filter(Boolean))];
+    const freshness =
+      freshnessValues.find((value) => /new|新品|鏂板搧/i.test(String(value))) ||
+      freshnessValues[0] ||
+      representative.freshness;
+    const jids = [...new Set(groupItems.map((item) => item.jid).filter(Boolean))];
+
+    return {
+      ...representative,
+      id: `image:${representative.image || groupIndex}`,
+      originalIds: groupItems.map((item) => item.id),
+      duplicateImageCount: groupItems.length,
+      isDuplicateImage: groupItems.length > 1,
+      gmv: groupItems.reduce((sum, item) => sum + Number(item.gmv || 0), 0),
+      orders: groupItems.reduce((sum, item) => sum + Number(item.orders || 0), 0),
+      priceMin,
+      priceMax,
+      priceMid: priceMax,
+      priceDisplay:
+        priceMin !== null && priceMax !== null && priceMin !== priceMax
+          ? `${formatPriceValue(priceMin)}-${formatPriceValue(priceMax)}`
+          : formatPriceValue(priceMax),
+      status: statuses.length > 1 ? "混合" : statuses[0] || representative.status,
+      source: sources.length ? sources.join("/") : representative.source,
+      freshness,
+      jid: jids.join("\n"),
+    };
+  });
+
+  const rankedByGmv = [...mergedProducts].sort((a, b) => Number(b.gmv || 0) - Number(a.gmv || 0));
+  const rankMap = new Map(rankedByGmv.map((item, index) => [item.id, index + 1]));
+
+  return computeIndexes(mergedProducts)
+    .map((item) => ({
+      ...item,
+      rank: rankMap.get(item.id) || 0,
+    }))
+    .sort((a, b) => Number(a.rank || 0) - Number(b.rank || 0));
 }
 
 function parseUpdateDate(value) {
@@ -622,12 +691,14 @@ function getFilteredProducts() {
 function renderSummary(filtered) {
   const allLevel2 = new Set(products.map((item) => item.level2).filter(Boolean)).size;
   const allLevel3 = new Set(products.map((item) => item.level3).filter(Boolean)).size;
+  const dedupedTotal = buildImageDedupedProducts(products).length;
   const topLevel2Rows = summarizeByCategory(products, "level2");
   const topLevel3Rows = summarizeByCategory(products, "level3");
   const topBand = summarizePriceBands(products).sort((a, b) => b.gmvIndex - a.gmvIndex)[0];
 
   const summary = [
     { label: "商品总数", value: formatNumber(products.length), hint: "" },
+    { label: "图片去重商品数", value: formatNumber(dedupedTotal), hint: "按主图去重" },
     { label: "当前结果", value: formatNumber(filtered.length), hint: "随筛选变化" },
     { label: "二级类目", value: allLevel2, hint: "可下钻筛选" },
     { label: "三级类目", value: allLevel3, hint: "商品分组依据" },
@@ -775,11 +846,15 @@ function renderPagination(meta, totalItems) {
 }
 
 function renderProducts(filtered) {
-  const displayGroups = getProductDisplayGroups(filtered, state.displayMode);
+  const dedupedProducts = buildImageDedupedProducts(filtered);
+  const displayGroups = getProductDisplayGroups(dedupedProducts, state.displayMode);
   const orderedItems = displayGroups.flatMap((group) => group.items);
   const pageMeta = getPagedItems(orderedItems);
   const pagedGroups = getPagedDisplayGroups(displayGroups, pageMeta.items);
-  els.resultCount.textContent = `${formatNumber(filtered.length)} 个商品`;
+  els.resultCount.innerHTML = `
+    <strong>${formatNumber(filtered.length)} 条原始商品记录</strong>
+    <small>${formatNumber(dedupedProducts.length)} 个图片去重商品</small>
+  `;
   const displayNotes = {
     flatGmv: "不分组，按 GMV指数 降序展示。",
     level2: "按二级类目分组，组内默认按 GMV指数 降序。",
@@ -799,7 +874,7 @@ function renderProducts(filtered) {
   if (state.view === "list") {
     els.productGroups.innerHTML = `
       ${renderProductList(pageMeta.items)}
-      ${renderPagination(pageMeta, filtered.length)}
+      ${renderPagination(pageMeta, dedupedProducts.length)}
     `;
     return;
   }
@@ -809,7 +884,7 @@ function renderProducts(filtered) {
       <div class="product-grid flat-product-grid">
         ${pageMeta.items.map(renderProductCard).join("")}
       </div>
-      ${renderPagination(pageMeta, filtered.length)}
+      ${renderPagination(pageMeta, dedupedProducts.length)}
     `;
     return;
   }
@@ -836,7 +911,7 @@ function renderProducts(filtered) {
         </section>
       `;
     })
-    .join("") + renderPagination(pageMeta, filtered.length);
+    .join("") + renderPagination(pageMeta, dedupedProducts.length);
 }
 
 function renderProductList(items) {
@@ -881,7 +956,7 @@ function renderProductRow(item) {
       <td><img class="product-thumb" src="${escapeAttr(item.image)}" alt="${escapeAttr(item.level3)} 商品主图" loading="lazy" /></td>
       <td>${escapeAttr(item.level2 || "未知")}</td>
       <td>${escapeAttr(item.level3 || "未知")}</td>
-      <td>${formatPrice(item.priceMid)}</td>
+      <td>${escapeAttr(item.priceDisplay || formatPrice(item.priceMid))}</td>
       <td><strong class="index-value">${formatIndex(item.gmvIndex)}</strong></td>
       <td>${formatIndex(item.orderIndex)}</td>
       <td><span class="signal-pill source">${escapeAttr(item.source || "未知")}</span></td>
@@ -916,7 +991,7 @@ function renderProductCard
         <p class="category-path">${formatCategoryDrilldownName(item.level2, item.level3)}</p>
         <div class="metric-line price-line">
           <span>价格指数</span>
-          <strong>${formatPrice(item.priceMid)}</strong>
+          <strong>${escapeAttr(item.priceDisplay || formatPrice(item.priceMid))}</strong>
         </div>
         <div class="index-pair">
           <div>

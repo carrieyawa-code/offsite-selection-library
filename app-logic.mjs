@@ -11,6 +11,16 @@ export const PRICE_BANDS = [
 
 const roundIndex = (value) => Math.round(value * 100) / 100;
 
+function isFiniteNumber(value) {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function formatPriceValue(value) {
+  if (!isFiniteNumber(value)) return "未知";
+  if (value > 999) return "异常";
+  return value.toFixed(2);
+}
+
 const SECTION_ALIASES = {
   women: ["women", "woman", "women's clothing", "womens clothing", "women clothing"],
   men: ["men", "men's clothing", "mens clothing", "men clothing"],
@@ -76,6 +86,15 @@ export function getPriceBand(price) {
   return band ? band.label : "未知";
 }
 
+export function parsePriceRange(value) {
+  const numbers = String(value || "").match(/\d+(?:\.\d+)?/g)?.map(Number) || [];
+  if (!numbers.length) return { priceMin: null, priceMax: null, priceMid: null };
+
+  const priceMin = Math.min(...numbers);
+  const priceMax = Math.max(...numbers);
+  return { priceMin, priceMax, priceMid: priceMax };
+}
+
 export function computeIndexes(products) {
   const totalGmv = products.reduce((sum, item) => sum + Number(item.gmv || 0), 0);
   const totalOrders = products.reduce((sum, item) => sum + Number(item.orders || 0), 0);
@@ -86,6 +105,65 @@ export function computeIndexes(products) {
     gmvIndex: totalGmv ? roundIndex((Number(item.gmv || 0) / totalGmv) * 100) : 0,
     orderIndex: totalOrders ? roundIndex((Number(item.orders || 0) / totalOrders) * 100) : 0,
   }));
+}
+
+export function buildImageDedupedProducts(products) {
+  const groups = new Map();
+
+  for (const item of products) {
+    const image = String(item.image || "").trim();
+    const key = image || `record:${item.id}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(item);
+  }
+
+  const mergedProducts = [...groups.values()].map((items, groupIndex) => {
+    const representative = [...items].sort((a, b) => Number(b.gmv || 0) - Number(a.gmv || 0))[0] || {};
+    const prices = items
+      .flatMap((item) => [item.priceMin, item.priceMax, item.priceMid])
+      .filter(isFiniteNumber);
+    const priceMin = prices.length ? Math.min(...prices) : null;
+    const priceMax = prices.length ? Math.max(...prices) : null;
+    const statuses = [...new Set(items.map((item) => item.status).filter(Boolean))];
+    const sources = [...new Set(items.map((item) => item.source).filter(Boolean))].sort();
+    const freshnessValues = [...new Set(items.map((item) => item.freshness).filter(Boolean))];
+    const freshness =
+      freshnessValues.find((value) => /new|新品/i.test(String(value))) ||
+      freshnessValues[0] ||
+      representative.freshness;
+    const jids = [...new Set(items.map((item) => item.jid).filter(Boolean))];
+
+    return {
+      ...representative,
+      id: `image:${representative.image || groupIndex}`,
+      originalIds: items.map((item) => item.id),
+      duplicateImageCount: items.length,
+      isDuplicateImage: items.length > 1,
+      gmv: items.reduce((sum, item) => sum + Number(item.gmv || 0), 0),
+      orders: items.reduce((sum, item) => sum + Number(item.orders || 0), 0),
+      priceMin,
+      priceMax,
+      priceMid: priceMax,
+      priceDisplay:
+        priceMin !== null && priceMax !== null && priceMin !== priceMax
+          ? `${formatPriceValue(priceMin)}-${formatPriceValue(priceMax)}`
+          : formatPriceValue(priceMax),
+      status: statuses.length > 1 ? "mixed" : statuses[0] || representative.status,
+      source: sources.length ? sources.join("/") : representative.source,
+      freshness,
+      jid: jids.join("\n"),
+    };
+  });
+
+  const rankedByGmv = [...mergedProducts].sort((a, b) => Number(b.gmv || 0) - Number(a.gmv || 0));
+  const rankMap = new Map(rankedByGmv.map((item, index) => [item.id, index + 1]));
+
+  return computeIndexes(mergedProducts)
+    .map((item) => ({
+      ...item,
+      rank: rankMap.get(item.id) || 0,
+    }))
+    .sort((a, b) => Number(a.rank || 0) - Number(b.rank || 0));
 }
 
 function parseUpdateDate(value) {

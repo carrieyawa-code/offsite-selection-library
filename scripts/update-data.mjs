@@ -1,7 +1,7 @@
 ﻿import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { resolveSectionFromLevel1 } from "../app-logic.mjs";
+import { parsePriceRange, resolveSectionFromLevel1 } from "../app-logic.mjs";
 
 const SHEET_ID = "1sNXgaBwFEe-oDhJYtCvF64Hzot8fy4qtind-Q3qqwL8";
 const SHEET_NAME = "2026-6-25";
@@ -72,11 +72,8 @@ function parseCsv(text) {
 }
 
 function parsePrice(value) {
-  const numbers = String(value).match(/\d+(?:\.\d+)?/g)?.map(Number) || [];
-  if (!numbers.length) return [null, null, null];
-  const low = Math.min(...numbers);
-  const high = Math.max(...numbers);
-  return [low, high, (low + high) / 2];
+  const { priceMin, priceMax, priceMid } = parsePriceRange(value);
+  return [priceMin, priceMax, priceMid];
 }
 
 function splitCategory(value) {

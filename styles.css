@@ -290,7 +290,7 @@ h3 {
 
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(8, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 16px;
 }
@@ -323,13 +323,13 @@ h3 {
   overflow-wrap: anywhere;
 }
 
-.summary-tile:nth-child(5),
-.summary-tile:nth-child(6) {
+.summary-tile:nth-child(6),
+.summary-tile:nth-child(7) {
   grid-column: span 2;
 }
 
-.summary-tile:nth-child(5) strong,
-.summary-tile:nth-child(6) strong {
+.summary-tile:nth-child(6) strong,
+.summary-tile:nth-child(7) strong {
   font-size: 18px;
   line-height: 1.25;
 }
@@ -542,6 +542,23 @@ td small {
 .section-heading span {
   color: var(--accent-strong);
   font-weight: 800;
+}
+
+#resultCount {
+  display: grid;
+  gap: 4px;
+  justify-items: end;
+}
+
+#resultCount strong {
+  color: var(--accent-strong);
+  font-size: 18px;
+}
+
+#resultCount small {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .product-groups {
