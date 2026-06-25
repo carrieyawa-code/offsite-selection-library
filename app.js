@@ -396,6 +396,8 @@ function enforceCanonicalHost() {
 const shouldBootDashboard = enforceCanonicalHost();
 
 const els = {
+  topNav: document.querySelector(".top-nav"),
+  filterStrip: document.querySelector(".filter-strip"),
   summaryGrid: document.querySelector("#summaryGrid"),
   level2Filter: document.querySelector("#level2Filter"),
   level3Filter: document.querySelector("#level3Filter"),
@@ -419,6 +421,8 @@ const els = {
   dataUpdatedAt: document.querySelector("#dataUpdatedAt"),
   viewButtons: document.querySelectorAll("[data-view]"),
 };
+
+let stickyOffsetFrame = 0;
 
 function base64ToBytes(value) {
   const binary = atob(value);
@@ -548,6 +552,21 @@ async function writeClipboardText(value) {
   textarea.select();
   document.execCommand("copy");
   textarea.remove();
+}
+
+function syncListHeaderOffset() {
+  const navBottom = Math.max(0, els.topNav?.getBoundingClientRect().bottom || 0);
+  const filterBottom = Math.max(0, els.filterStrip?.getBoundingClientRect().bottom || 0);
+  const offset = Math.max(navBottom, filterBottom) + 8;
+  document.documentElement.style.setProperty("--list-table-header-top", `${Math.round(offset)}px`);
+}
+
+function scheduleListHeaderOffsetSync() {
+  if (stickyOffsetFrame) return;
+  stickyOffsetFrame = window.requestAnimationFrame(() => {
+    stickyOffsetFrame = 0;
+    syncListHeaderOffset();
+  });
 }
 
 function fillSelect(select, options, selected, allLabel) {
@@ -690,6 +709,9 @@ function bindEvents() {
       button.textContent = "Copy JID";
     }, 1200);
   });
+
+  window.addEventListener("scroll", scheduleListHeaderOffsetSync, { passive: true });
+  window.addEventListener("resize", scheduleListHeaderOffsetSync);
 }
 
 function getFilteredProducts() {
@@ -1067,6 +1089,7 @@ function render() {
   renderLevel3Bars(filtered);
   renderPriceBands(filtered);
   renderProducts(filtered);
+  scheduleListHeaderOffsetSync();
 }
 
 if (shouldBootDashboard) {

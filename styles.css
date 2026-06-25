@@ -15,6 +15,7 @@
   --ok: #027a48;
   --ok-soft: #dcfae6;
   --shadow: 0 18px 48px rgba(31, 69, 130, 0.1);
+  --list-table-header-top: 72px;
 }
 
 * {
@@ -761,7 +762,7 @@ td small {
 }
 
 .product-table-wrap {
-  overflow-x: auto;
+  overflow: visible;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fff;
@@ -790,6 +791,12 @@ td small {
   color: var(--muted);
   font-weight: 900;
   white-space: nowrap;
+}
+
+.product-groups.list-mode .product-table th {
+  top: var(--list-table-header-top);
+  z-index: 8;
+  box-shadow: inset 0 -1px 0 var(--line);
 }
 
 .product-table tbody tr:hover {
@@ -898,6 +905,10 @@ td small {
 
   .analysis-layout {
     grid-template-columns: 1fr;
+  }
+
+  .product-table-wrap {
+    overflow-x: auto;
   }
 }
 
