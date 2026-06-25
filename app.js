@@ -23,6 +23,17 @@ function formatPriceValue(value) {
   return value.toFixed(2);
 }
 
+function resolveGroupedFreshness(values, fallback) {
+  const normalized = [...new Set(values.filter(Boolean).map((value) => String(value).trim()))];
+  const hasFresh = normalized.some((value) => /new|新品|鏂板搧/i.test(value));
+  const hasAged = normalized.some((value) => /old|老品|鑰佸搧/i.test(value));
+
+  if (hasFresh && hasAged) return "老品/新品";
+  if (hasFresh) return "新品";
+  if (hasAged) return "老品";
+  return fallback;
+}
+
 function getPriceBand(price) {
   if (typeof price !== "number" || Number.isNaN(price)) {
     return "未知";
@@ -98,11 +109,8 @@ function buildImageDedupedProducts(items) {
     const priceMax = prices.length ? Math.max(...prices) : null;
     const statuses = [...new Set(groupItems.map((item) => item.status).filter(Boolean))];
     const sources = [...new Set(groupItems.map((item) => item.source).filter(Boolean))].sort();
-    const freshnessValues = [...new Set(groupItems.map((item) => item.freshness).filter(Boolean))];
-    const freshness =
-      freshnessValues.find((value) => /new|新品|鏂板搧/i.test(String(value))) ||
-      freshnessValues[0] ||
-      representative.freshness;
+    const freshnessValues = groupItems.map((item) => item.freshness);
+    const freshness = resolveGroupedFreshness(freshnessValues, representative.freshness);
     const jids = [...new Set(groupItems.map((item) => item.jid).filter(Boolean))];
 
     return {
