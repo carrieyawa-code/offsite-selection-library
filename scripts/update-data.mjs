@@ -1,4 +1,4 @@
-import crypto from "node:crypto";
+﻿import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { resolveSectionFromLevel1 } from "../app-logic.mjs";
@@ -16,14 +16,14 @@ const SECTION_FILES = {
 };
 
 const FIELD_ALIASES = {
-  image: ["商品主图", "主图", "图片", "image", "Image"],
-  category: ["类目", "分类", "category", "Category"],
-  price: ["参考价格", "参考价", "价格", "price", "Price"],
-  orders: ["成交订单", "订单数", "orders", "Orders"],
+  image: ["\u5546\u54c1\u4e3b\u56fe", "\u4e3b\u56fe", "\u56fe\u7247", "image", "Image"],
+  category: ["\u7c7b\u76ee", "\u5206\u7c7b", "category", "Category"],
+  price: ["\u53c2\u8003\u4ef7\u683c", "\u53c2\u8003\u4ef7", "\u4ef7\u683c", "price", "Price"],
+  orders: ["\u6210\u4ea4\u8ba2\u5355", "\u8ba2\u5355\u6570", "orders", "Orders"],
   gmv: ["GMV", "gmv"],
-  status: ["审核状态", "审核标签", "状态", "status", "Status"],
-  updatedAt: ["更新时间", "更新日期", "updatedAt", "Updated At"],
-  source: ["来源", "source", "Source"],
+  status: ["\u5ba1\u6838\u72b6\u6001", "\u5ba1\u6838\u6807\u7b7e", "\u72b6\u6001", "status", "Status"],
+  updatedAt: ["\u66f4\u65b0\u65f6\u95f4", "\u66f4\u65b0\u65e5\u671f", "updatedAt", "Updated At"],
+  source: ["\u6765\u6e90", "source", "Source"],
   jid: ["J-ID", "JID", "jid"],
 };
 
@@ -117,7 +117,7 @@ function pickField(source, aliases) {
 
 function assertRequiredField(fieldName, value) {
   if (!String(value || "").trim()) {
-    throw new Error(`Google Sheet 缺少必要字段：${fieldName}`);
+    throw new Error(`Google Sheet 缂哄皯蹇呰瀛楁锛?{fieldName}`);
   }
 }
 
@@ -131,8 +131,8 @@ function normalizeRows(rows) {
     const priceLabel = pickField(sourceRow, FIELD_ALIASES.price);
     const gmv = pickField(sourceRow, FIELD_ALIASES.gmv);
 
-    assertRequiredField("商品主图", image);
-    assertRequiredField("类目", categoryPath);
+    assertRequiredField("image", image);
+    assertRequiredField("category", categoryPath);
     assertRequiredField("GMV", gmv);
 
     const [priceMin, priceMax, priceMid] = parsePrice(priceLabel);
@@ -153,9 +153,9 @@ function normalizeRows(rows) {
       priceMid,
       orders: toNumber(pickField(sourceRow, FIELD_ALIASES.orders)),
       gmv: toNumber(gmv),
-      status: pickField(sourceRow, FIELD_ALIASES.status) || "未知",
+      status: pickField(sourceRow, FIELD_ALIASES.status) || "unknown",
       updatedAt: pickField(sourceRow, FIELD_ALIASES.updatedAt),
-      source: pickField(sourceRow, FIELD_ALIASES.source) || "未知",
+      source: pickField(sourceRow, FIELD_ALIASES.source) || "unknown",
       jid: pickField(sourceRow, FIELD_ALIASES.jid),
     };
   });
@@ -304,5 +304,6 @@ main().catch((error) => {
   console.error(error);
   process.exit(1);
 });
+
 
 
