@@ -3,148 +3,148 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>绔欏閫夊搧绱犳潗搴?/title>
+    <title>站外选品素材库</title>
     <link rel="stylesheet" href="./styles.css?v=20260625-list-page" />
   </head>
-  <body>
+  <body class="theme-women">
     <div class="site-layout">
-      <nav class="top-nav" aria-label="涓€绾х被鐩鑸?>
+      <nav class="top-nav" aria-label="一级类目导航">
         <a class="active" href="./women.html">Women</a>
         <a href="./men.html">Men</a>
         <a href="./underwear.html">Underwear</a>
         <a href="./sports.html">Sports</a>
       </nav>
       <main class="app-shell">
-      <header class="topbar">
-        <div>
-          <p class="eyebrow">Offsite Selection Material Library</p>
-          <h1>绔欏閫夊搧绱犳潗搴?/h1>
-          <span class="data-footer" id="dataUpdatedAt">鏇存柊鏃ユ湡锛?</span>
-        </div>
-                <div class="view-switch" aria-label="商品视图切换">
-          <button class="active" type="button" data-view="card">卡片</button>
-          <button type="button" data-view="list">商品列表</button>
-        </div>
-      </header>
-
-      <section class="summary-grid" id="summaryGrid" aria-label="汇总数据"></section>
-
-      <section class="filter-strip" aria-label="筛选条件">
-        <label>
-          二级类目
-          <select id="level2Filter"></select>
-        </label>
-        <label>
-          三级类目
-          <select id="level3Filter"></select>
-        </label>
-        <label>
-          价格带
-          <select id="priceFilter"></select>
-        </label>
-        <label>
-          审核标签
-          <select id="statusFilter">
-            <option value="all">全部</option>
-            <option value="通过">通过</option>
-            <option value="驳回">驳回</option>
-          </select>
-        </label>
-        <label>
-          来源
-          <select id="sourceFilter"></select>
-        </label>
-        <label>
-          新老品
-          <select id="freshnessFilter">
-            <option value="all">全部</option>
-            <option value="新品">新品</option>
-            <option value="老品">老品</option>
-          </select>
-        </label>
-        <label>
-          是否重复款
-          <select id="duplicateFilter">
-            <option value="all">全部</option>
-            <option value="duplicate">图片重复款</option>
-            <option value="unique">图片不重复</option>
-          </select>
-        </label>
-        <label class="rank-range-label">
-          rank范围
-          <span class="rank-range-inputs">
-            <input id="rankMinFilter" type="number" min="1" inputmode="numeric" placeholder="起始" />
-            <input id="rankMaxFilter" type="number" min="1" inputmode="numeric" placeholder="结束" />
-          </span>
-        </label>
-        <label>
-          排序
-          <select id="sortFilter">
-            <option value="gmvIndex">GMV指数</option>
-            <option value="orderIndex">订单指数</option>
-            <option value="priceMid">价格指数</option>
-          </select>
-        </label>
-        <button id="resetFilters" type="button">重置</button>
-      </section>
-
-      <section class="analysis-layout">
-        <div class="analysis-panel">
-          <div class="panel-heading">
-            <h2>浜岀骇绫荤洰琛ㄧ幇</h2>
-            <span>鎸?GMV鎸囨暟 鎺掑簭</span>
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Offsite Selection Material Library</p>
+            <h1>站外选品素材库</h1>
+            <span class="data-footer" id="dataUpdatedAt">更新日期：-</span>
           </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>绫荤洰</th>
-                  <th>鍟嗗搧鏁?/th>
-                  <th>GMV鎸囨暟</th>
-                  <th>璁㈠崟鎸囨暟</th>
-                  <th>涓綅浠锋牸鎸囨暟</th>
-                </tr>
-              </thead>
-              <tbody id="level2Table"></tbody>
-            </table>
+          <div class="view-switch" aria-label="商品视图切换">
+            <button class="active" type="button" data-view="card">卡片</button>
+            <button type="button" data-view="list">商品列表</button>
           </div>
-        </div>
+        </header>
 
-        <div class="analysis-panel">
-          <div class="panel-heading">
-            <h2>涓夌骇绫荤洰涓嬮捇</h2>
-            <span id="level3Context">鍏ㄩ儴浜岀骇绫荤洰</span>
-          </div>
-          <div id="level3Bars" class="bar-list"></div>
-        </div>
+        <section class="summary-grid" id="summaryGrid" aria-label="汇总数据"></section>
 
-        <div class="analysis-panel">
-          <div class="panel-heading">
-            <h2>浠锋牸甯︾粨鏋?/h2>
-            <span>褰撳墠绛涢€夎寖鍥?/span>
-          </div>
-          <div id="priceBandBars" class="bar-list compact"></div>
-        </div>
-      </section>
+        <section class="filter-strip" aria-label="筛选条件">
+          <label>
+            二级类目
+            <select id="level2Filter"></select>
+          </label>
+          <label>
+            三级类目
+            <select id="level3Filter"></select>
+          </label>
+          <label>
+            价格带
+            <select id="priceFilter"></select>
+          </label>
+          <label>
+            审核标签
+            <select id="statusFilter">
+              <option value="all">全部</option>
+              <option value="通过">通过</option>
+              <option value="驳回">驳回</option>
+            </select>
+          </label>
+          <label>
+            来源
+            <select id="sourceFilter"></select>
+          </label>
+          <label>
+            新老品
+            <select id="freshnessFilter">
+              <option value="all">全部</option>
+              <option value="新品">新品</option>
+              <option value="老品">老品</option>
+            </select>
+          </label>
+          <label>
+            是否重复款
+            <select id="duplicateFilter">
+              <option value="all">全部</option>
+              <option value="duplicate">图片重复款</option>
+              <option value="unique">图片不重复</option>
+            </select>
+          </label>
+          <label class="rank-range-label">
+            rank范围
+            <span class="rank-range-inputs">
+              <input id="rankMinFilter" type="number" min="1" inputmode="numeric" placeholder="起始" />
+              <input id="rankMaxFilter" type="number" min="1" inputmode="numeric" placeholder="结束" />
+            </span>
+          </label>
+          <label>
+            排序
+            <select id="sortFilter">
+              <option value="gmvIndex">GMV指数</option>
+              <option value="orderIndex">订单指数</option>
+              <option value="priceMid">价格指数</option>
+            </select>
+          </label>
+          <button id="resetFilters" type="button">重置</button>
+        </section>
 
-      <section class="product-section">
-        <div class="section-heading">
-          <div class="product-heading-left">
-            <h2>鍟嗗搧灞曠ず</h2>
-            <p id="resultNote">涓嶅垎缁勶紝鎸?GMV鎸囨暟 闄嶅簭灞曠ず銆?/p>
-            <label class="product-display-control">
-              灞曠ず鏂瑰紡
-              <select id="displayModeFilter">
-                <option value="flatGmv">GMV鎸囨暟闄嶅簭</option>
-                <option value="level2">鎸変簩绾х被鐩垎缁?/option>
-                <option value="level3">鎸変笁绾х被鐩垎缁?/option>
-              </select>
-            </label>
+        <section class="analysis-layout">
+          <div class="analysis-panel">
+            <div class="panel-heading">
+              <h2>二级类目表现</h2>
+              <span>按 GMV指数 排序</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>类目</th>
+                    <th>商品数</th>
+                    <th>GMV指数</th>
+                    <th>订单指数</th>
+                    <th>中位价格指数</th>
+                  </tr>
+                </thead>
+                <tbody id="level2Table"></tbody>
+              </table>
+            </div>
           </div>
-          <span id="resultCount"></span>
-        </div>
-        <div id="productGroups" class="product-groups"></div>
-      </section>
+
+          <div class="analysis-panel">
+            <div class="panel-heading">
+              <h2>三级类目下钻</h2>
+              <span id="level3Context">全部二级类目</span>
+            </div>
+            <div id="level3Bars" class="bar-list"></div>
+          </div>
+
+          <div class="analysis-panel">
+            <div class="panel-heading">
+              <h2>价格带结构</h2>
+              <span>当前筛选范围</span>
+            </div>
+            <div id="priceBandBars" class="bar-list compact"></div>
+          </div>
+        </section>
+
+        <section class="product-section">
+          <div class="section-heading">
+            <div class="product-heading-left">
+              <h2>商品展示</h2>
+              <p id="resultNote">不分组，按 GMV指数 降序展示。</p>
+              <label class="product-display-control">
+                展示方式
+                <select id="displayModeFilter">
+                  <option value="flatGmv">GMV指数降序</option>
+                  <option value="level2">按照二级类目分组</option>
+                  <option value="level3">按照三级类目分组</option>
+                </select>
+              </label>
+            </div>
+            <span id="resultCount"></span>
+          </div>
+          <div id="productGroups" class="product-groups"></div>
+        </section>
       </main>
     </div>
 
