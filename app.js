@@ -275,6 +275,8 @@ function summarizeSimple(items, key) {
 let products = [];
 let hasBoundDashboardEvents = false;
 const DATA_DECRYPTION_KEY = "xuanpin2026";
+const CARD_PAGE_SIZE = 60;
+const LIST_PAGE_SIZE = 100;
 const CANONICAL_HOSTS = new Set(["offsiteselection.uk", "www.offsiteselection.uk"]);
 const dashboardConfig = window.DASHBOARD_CONFIG || {};
 const dataFile = dashboardConfig.dataFile || "products-all-data.enc.js";
@@ -293,6 +295,7 @@ const state = {
   sortBy: "gmvIndex",
   displayMode: "flatGmv",
   view: "card",
+  productPage: 1,
 };
 
 function enforceCanonicalHost() {
@@ -497,40 +500,51 @@ function initFilters() {
   );
 }
 
+function resetProductPage() {
+  state.productPage = 1;
+}
+
 function bindEvents() {
   els.level2Filter.addEventListener("change", () => {
     state.level2 = els.level2Filter.value;
     state.level3 = "all";
+    resetProductPage();
     render();
   });
 
   els.level3Filter.addEventListener("change", () => {
     state.level3 = els.level3Filter.value;
+    resetProductPage();
     render();
   });
 
   els.priceFilter.addEventListener("change", () => {
     state.priceBand = els.priceFilter.value;
+    resetProductPage();
     render();
   });
 
   els.statusFilter.addEventListener("change", () => {
     state.status = els.statusFilter.value;
+    resetProductPage();
     render();
   });
 
   els.sourceFilter.addEventListener("change", () => {
     state.source = els.sourceFilter.value;
+    resetProductPage();
     render();
   });
 
   els.freshnessFilter.addEventListener("change", () => {
     state.freshness = els.freshnessFilter.value;
+    resetProductPage();
     render();
   });
 
   els.duplicateFilter.addEventListener("change", () => {
     state.duplicate = els.duplicateFilter.value;
+    resetProductPage();
     render();
   });
 
@@ -538,17 +552,20 @@ function bindEvents() {
     input.addEventListener("input", () => {
       state.rankMin = els.rankMinFilter.value;
       state.rankMax = els.rankMaxFilter.value;
+      resetProductPage();
       render();
     });
   });
 
   els.sortFilter.addEventListener("change", () => {
     state.sortBy = els.sortFilter.value;
+    resetProductPage();
     render();
   });
 
   els.displayModeFilter.addEventListener("change", () => {
     state.displayMode = els.displayModeFilter.value;
+    resetProductPage();
     renderProducts(applyFilters(products, state));
   });
 
@@ -565,6 +582,7 @@ function bindEvents() {
       rankMax: "",
       sortBy: "gmvIndex",
       displayMode: "flatGmv",
+      productPage: 1,
     });
     render();
   });
@@ -572,12 +590,21 @@ function bindEvents() {
   for (const button of els.viewButtons) {
     button.addEventListener("click", () => {
       state.view = button.dataset.view;
+      resetProductPage();
       for (const item of els.viewButtons) item.classList.toggle("active", item === button);
       renderProducts(applyFilters(products, state));
     });
   }
 
   els.productGroups.addEventListener("click", async (event) => {
+    const pageButton = event.target.closest("[data-page-action]");
+    if (pageButton) {
+      const direction = pageButton.dataset.pageAction === "next" ? 1 : -1;
+      state.productPage += direction;
+      renderProducts(applyFilters(products, state));
+      return;
+    }
+
     const button = event.target.closest("[data-jid]");
     if (!button) return;
     await writeClipboardText(button.dataset.jid || "");
@@ -645,6 +672,7 @@ function renderLevel2Table(filtered) {
     button.addEventListener("click", () => {
       state.level2 = button.dataset.level2;
       state.level3 = "all";
+      resetProductPage();
       render();
     });
   });
@@ -664,6 +692,7 @@ function renderLevel3Bars(filtered) {
   els.level3Bars.querySelectorAll("[data-level3]").forEach((button) => {
     button.addEventListener("click", () => {
       state.level3 = button.dataset.level3;
+      resetProductPage();
       render();
     });
   });
@@ -694,17 +723,71 @@ function renderBarRow(name, gmvIndex, orderIndex, count, kind, rawValue = name) 
   `;
 }
 
+function getProductPageSize() {
+  return state.view === "list" ? LIST_PAGE_SIZE : CARD_PAGE_SIZE;
+}
+
+function getPagedItems(items) {
+  const pageSize = getProductPageSize();
+  const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+  const currentPage = Math.min(Math.max(Number(state.productPage) || 1, 1), totalPages);
+  state.productPage = currentPage;
+  const start = (currentPage - 1) * pageSize;
+  const end = Math.min(start + pageSize, items.length);
+
+  return {
+    currentPage,
+    totalPages,
+    pageSize,
+    startIndex: items.length ? start + 1 : 0,
+    endIndex: end,
+    items: items.slice(start, end),
+  };
+}
+
+function getPagedDisplayGroups(displayGroups, pageItems) {
+  if (state.displayMode === "flatGmv") {
+    return [{ ...displayGroups[0], items: pageItems }];
+  }
+
+  const pageIds = new Set(pageItems.map((item) => item.id));
+  return displayGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => pageIds.has(item.id)),
+    }))
+    .filter((group) => group.items.length);
+}
+
+function renderPagination(meta, totalItems) {
+  if (!totalItems) return "";
+
+  return `
+    <nav class="product-pagination" aria-label="商品分页">
+      <span>${formatNumber(meta.startIndex)}-${formatNumber(meta.endIndex)} / ${formatNumber(totalItems)}</span>
+      <div class="pagination-buttons">
+        <button type="button" data-page-action="prev" ${meta.currentPage <= 1 ? "disabled" : ""}>上一页</button>
+        <strong>${formatNumber(meta.currentPage)} / ${formatNumber(meta.totalPages)}</strong>
+        <button type="button" data-page-action="next" ${meta.currentPage >= meta.totalPages ? "disabled" : ""}>下一页</button>
+      </div>
+    </nav>
+  `;
+}
+
 function renderProducts(filtered) {
   const displayGroups = getProductDisplayGroups(filtered, state.displayMode);
+  const orderedItems = displayGroups.flatMap((group) => group.items);
+  const pageMeta = getPagedItems(orderedItems);
+  const pagedGroups = getPagedDisplayGroups(displayGroups, pageMeta.items);
   els.resultCount.textContent = `${formatNumber(filtered.length)} 个商品`;
   const displayNotes = {
     flatGmv: "不分组，按 GMV指数 降序展示。",
     level2: "按二级类目分组，组内默认按 GMV指数 降序。",
     level3: "按三级类目分组，组内默认按 GMV指数 降序。",
   };
-  els.resultNote.textContent =
-    state.view === "wall" ? "图片墙模式保留核心指数，方便快速扫款。" : displayNotes[state.displayMode];
-  els.productGroups.className = `product-groups ${state.view === "wall" ? "wall-mode" : ""}`;
+  const pageNote = state.view === "list" ? "列表模式每页 100 个商品。" : "卡片模式每页 60 个商品。";
+  els.resultNote.textContent = `${displayNotes[state.displayMode]} ${pageNote}`;
+  els.productGroups.className = `product-groups ${state.view === "list" ? "list-mode" : ""}`;
 
   if (!filtered.length) {
     els.productGroups.innerHTML = products.length
@@ -713,16 +796,25 @@ function renderProducts(filtered) {
     return;
   }
 
-  if (state.displayMode === "flatGmv") {
+  if (state.view === "list") {
     els.productGroups.innerHTML = `
-      <div class="product-grid flat-product-grid">
-        ${displayGroups[0].items.map(renderProductCard).join("")}
-      </div>
+      ${renderProductList(pageMeta.items)}
+      ${renderPagination(pageMeta, filtered.length)}
     `;
     return;
   }
 
-  els.productGroups.innerHTML = displayGroups
+  if (state.displayMode === "flatGmv") {
+    els.productGroups.innerHTML = `
+      <div class="product-grid flat-product-grid">
+        ${pageMeta.items.map(renderProductCard).join("")}
+      </div>
+      ${renderPagination(pageMeta, filtered.length)}
+    `;
+    return;
+  }
+
+  els.productGroups.innerHTML = pagedGroups
     .map((group) => {
       const sorted = group.items;
       const subtitle =
@@ -744,10 +836,65 @@ function renderProducts(filtered) {
         </section>
       `;
     })
-    .join("");
+    .join("") + renderPagination(pageMeta, filtered.length);
 }
 
-function renderProductCard(item) {
+function renderProductList(items) {
+  return `
+    <div class="product-table-wrap">
+      <table class="product-table">
+        <thead>
+          <tr>
+            <th>rank</th>
+            <th>主图</th>
+            <th>二级类目</th>
+            <th>三级类目</th>
+            <th>价格指数</th>
+            <th>GMV指数</th>
+            <th>订单指数</th>
+            <th>来源</th>
+            <th>新老品</th>
+            <th>重复款</th>
+            <th>审核标签</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${items.map(renderProductRow).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderProductRow(item) {
+  const statusClass = item.status === "通过" ? "approved" : "rejected";
+  const freshnessClass = item.freshness === "新品" ? "fresh" : item.freshness === "老品" ? "aged" : "";
+  const duplicateText = item.isDuplicateImage ? `重复 · ${item.duplicateImageCount}` : "不重复";
+  const jidButton = item.jid
+    ? `<button class="copy-jid-button" type="button" data-jid="${escapeAttr(item.jid)}">Copy JID</button>`
+    : "";
+
+  return `
+    <tr>
+      <td><strong>${item.rank}</strong></td>
+      <td><img class="product-thumb" src="${escapeAttr(item.image)}" alt="${escapeAttr(item.level3)} 商品主图" loading="lazy" /></td>
+      <td>${escapeAttr(item.level2 || "未知")}</td>
+      <td>${escapeAttr(item.level3 || "未知")}</td>
+      <td>${formatPrice(item.priceMid)}</td>
+      <td><strong class="index-value">${formatIndex(item.gmvIndex)}</strong></td>
+      <td>${formatIndex(item.orderIndex)}</td>
+      <td><span class="signal-pill source">${escapeAttr(item.source || "未知")}</span></td>
+      <td><span class="signal-pill ${freshnessClass}">${escapeAttr(item.freshness || "未知")}</span></td>
+      <td><span class="signal-pill ${item.isDuplicateImage ? "duplicate" : ""}">${duplicateText}</span></td>
+      <td><span class="list-status ${statusClass}">${escapeAttr(item.status || "未知")}</span></td>
+      <td>${jidButton}</td>
+    </tr>
+  `;
+}
+
+function renderProductCard
+(item) {
   const statusClass = item.status === "通过" ? "approved" : "rejected";
   const freshnessClass = item.freshness === "新品" ? "fresh" : item.freshness === "老品" ? "aged" : "";
   const duplicateTag = item.isDuplicateImage
