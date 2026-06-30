@@ -71,6 +71,36 @@ body.theme-sports {
   --shadow: 0 18px 48px rgba(21, 111, 86, 0.1);
 }
 
+body.theme-shoes {
+  --bg: #f7f8ff;
+  --surface-soft: #fafbff;
+  --line: #d8dcf7;
+  --accent: #6b6ff5;
+  --accent-strong: #4046c8;
+  --accent-soft: #e9eaff;
+  --shadow: 0 18px 48px rgba(64, 70, 200, 0.1);
+}
+
+body.theme-bags {
+  --bg: #fffaf5;
+  --surface-soft: #fffdf9;
+  --line: #eedfcf;
+  --accent: #c88838;
+  --accent-strong: #9c6015;
+  --accent-soft: #fcede0;
+  --shadow: 0 18px 48px rgba(156, 96, 21, 0.1);
+}
+
+body.theme-acc {
+  --bg: #f7fbff;
+  --surface-soft: #fbfdff;
+  --line: #d7e7f5;
+  --accent: #4799b8;
+  --accent-strong: #1f6d8b;
+  --accent-soft: #e3f3fa;
+  --shadow: 0 18px 48px rgba(31, 109, 139, 0.1);
+}
+
 .redirect-screen,
 .lock-screen {
   display: grid;
@@ -137,6 +167,18 @@ body.theme-sports {
 
 .redirect-panel .theme-sports-link {
   background: #20a67a;
+}
+
+.redirect-panel .theme-shoes-link {
+  background: #6b6ff5;
+}
+
+.redirect-panel .theme-bags-link {
+  background: #c88838;
+}
+
+.redirect-panel .theme-acc-link {
+  background: #4799b8;
 }
 
 .password-field {

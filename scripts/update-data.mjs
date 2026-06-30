@@ -4,7 +4,7 @@ import path from "node:path";
 import { parsePriceRange, resolveSectionFromLevel1 } from "../app-logic.mjs";
 
 const SHEET_ID = "1sNXgaBwFEe-oDhJYtCvF64Hzot8fy4qtind-Q3qqwL8";
-const SHEET_NAME = "2026-6-25";
+const SHEET_NAME = "2026-6-30";
 const ACCESS_CODE = "xuanpin2026";
 const OUTPUT_DIR = path.join("data");
 const OUTPUT_PATH = path.join("data", "products-all-data.enc.js");
@@ -13,6 +13,9 @@ const SECTION_FILES = {
   men: "products-men-data.enc.js",
   underwear: "products-underwear-data.enc.js",
   sports: "products-sports-data.enc.js",
+  shoes: "products-shoes-data.enc.js",
+  bags: "products-bags-data.enc.js",
+  acc: "products-acc-data.enc.js",
 };
 
 const FIELD_ALIASES = {
@@ -272,6 +275,9 @@ async function writePageConfigs(versionBySection) {
     ["men.html", "men"],
     ["underwear.html", "underwear"],
     ["sports.html", "sports"],
+    ["shoes.html", "shoes"],
+    ["bags.html", "bags"],
+    ["acc.html", "acc"],
     ["dashboard.html", "women"],
   ];
 

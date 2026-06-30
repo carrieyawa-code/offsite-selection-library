@@ -37,6 +37,9 @@ const SECTION_ALIASES = {
   men: ["men", "men's clothing", "mens clothing", "men clothing"],
   underwear: ["underwear", "lingerie & underwear", "lingerie and underwear", "lingerie"],
   sports: ["sports", "sports & outdoor", "sports and outdoor", "sportswear"],
+  shoes: ["shoes", "shoe", "footwear"],
+  bags: ["luggage & bags", "luggage and bags", "bags", "bag"],
+  acc: ["apparel accessories", "accessories", "accessory"],
 };
 
 function normalizeCategoryName(value) {
